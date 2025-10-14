@@ -1,0 +1,52 @@
+# Dockerfile pour le backend Express.js
+FROM node:18-alpine
+
+# Informations du mainteneur
+LABEL maintainer="yassineco"
+LABEL description="Meknow Backend API - E-commerce platform"
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Variables d'environnement
+ENV NODE_ENV=production
+ENV PORT=9000
+
+# Installer les dépendances système nécessaires
+RUN apk add --no-cache \
+    curl \
+    postgresql-client \
+    && rm -rf /var/cache/apk/*
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+
+# Installer les dépendances Node.js
+RUN npm ci --only=production && npm cache clean --force
+
+# Copier le code source
+COPY . .
+
+# Créer les répertoires nécessaires
+RUN mkdir -p /app/uploads /app/logs && \
+    chmod 755 /app/uploads /app/logs
+
+# Créer un utilisateur non-root pour la sécurité
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S meknow -u 1001 -G nodejs
+
+# Changer la propriété des fichiers
+RUN chown -R meknow:nodejs /app
+
+# Basculer vers l'utilisateur non-root
+USER meknow
+
+# Exposer le port
+EXPOSE 9000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:9000/health || exit 1
+
+# Commande de démarrage
+CMD ["node", "backend-minimal.js"]
