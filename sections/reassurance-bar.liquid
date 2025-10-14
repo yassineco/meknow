@@ -1,0 +1,102 @@
+<style>
+  .reassurance-bar {
+    background-color: var(--color-bg-secondary);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--spacing-md);
+  }
+  
+  .reassurance-bar__items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    max-width: 1400px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .reassurance-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .reassurance-item__icon {
+    width: 40px;
+    height: 40px;
+    color: var(--color-accent);
+  }
+  
+  .reassurance-item__title {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+  }
+  
+  .reassurance-item__text {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+  }
+</style>
+
+<div class="reassurance-bar">
+  <div class="reassurance-bar__items">
+    {%- if settings.show_cod_badge -%}
+      <div class="reassurance-item">
+        <svg class="reassurance-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+          <line x1="1" y1="10" x2="23" y2="10"></line>
+        </svg>
+        <span class="reassurance-item__title">Paiement à la livraison</span>
+        <span class="reassurance-item__text">Disponible en France</span>
+      </div>
+    {%- endif -%}
+    
+    {%- if settings.show_return_badge -%}
+      <div class="reassurance-item">
+        <svg class="reassurance-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        <span class="reassurance-item__title">Retours gratuits</span>
+        <span class="reassurance-item__text">14 jours pour changer d'avis</span>
+      </div>
+    {%- endif -%}
+    
+    {%- if settings.show_shipping_badge -%}
+      <div class="reassurance-item">
+        <svg class="reassurance-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="3" width="15" height="13"></rect>
+          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+          <circle cx="5.5" cy="18.5" r="2.5"></circle>
+          <circle cx="18.5" cy="18.5" r="2.5"></circle>
+        </svg>
+        <span class="reassurance-item__title">Expédié depuis France</span>
+        <span class="reassurance-item__text">{{ settings.delivery_delay | default: '3-5 jours ouvrés' }}</span>
+      </div>
+    {%- endif -%}
+    
+    {%- if settings.show_made_morocco_badge -%}
+      <div class="reassurance-item">
+        <svg class="reassurance-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span class="reassurance-item__title">Made in Morocco</span>
+        <span class="reassurance-item__text">Qualité artisanale</span>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Barre de réassurance",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Barre de réassurance"
+    }
+  ]
+}
+{% endschema %}

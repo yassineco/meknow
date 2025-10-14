@@ -1,0 +1,262 @@
+Tu es un lead dev e-commerce.
+Objectif : créer un monorepo qui remplace Shopify par MedusaJS (API open-source) tout en conservant le design existant “Menow” (thème noir premium, animations, hero, lookbook, badges, footer légal).
+Le paiement à la livraison (COD) doit être actif via manual provider. On laisse la porte ouverte à Stripe plus tard (optionnel, off par défaut).
+
+0) Contraintes & design à respecter
+
+Palette : bg #0B0B0C, bg-2 #121214, text #F3F3F3, muted #B5B5B5, accent #F2C14E, border #1E1E22
+
+Typo : Playfair Display + Inter (Google Fonts)
+
+Effets/UX :
+
+Hero avec formes dorées animées, badge “Made in Morocco” pulsant
+
+Lookbook grille 3 colonnes (zoom/overlay au survol)
+
+Badges de réassurance (Fabrication marocaine, Livraison France, Retours 30j, Paiement comptant)
+
+Sticky header, panier badge (0 → n), scroll smooth, transitions
+
+Sections/pages : Header, Hero, Collections vedettes (4 produits), Lookbook, Footer (CGV/ML/RGPD/Contact)
+
+Responsive mobile-first, A11y basique (focus visibles, alt images)
+
+1) Monorepo & structure à générer
+
+Crée ce répertoire racine :
+
+menow-medusa/
+  README.md
+  pnpm-workspace.yaml
+  package.json
+  .gitignore
+
+  medusa-api/               # API e-commerce (Node, MedusaJS)
+    package.json
+    src/
+      loaders/ (env, db, plugins)
+      api/ (routes custom si besoin)
+      config/
+        plugins.ts
+        projectConfig.ts
+      medusa-config.js
+    .env.example
+
+  menow-web/                # Front Next.js 14 (App Router) = DESIGN IDENTIQUE
+    package.json
+    next.config.mjs
+    tsconfig.json
+    .env.local.example
+    public/
+      og-default.jpg
+      logo-menow.png
+      favicon.ico
+    src/
+      app/
+        layout.tsx
+        page.tsx              # Home = Hero + Collections vedettes + Lookbook + Réassurance
+        legal/
+          cgv/page.tsx
+          mentions-legales/page.tsx
+          confidentialite/page.tsx
+          retours/page.tsx
+        produit/[handle]/page.tsx     # PDP
+        collection/[handle]/page.tsx  # PLP
+        api/
+          cart/route.ts       # API routes vers Medusa Store (proxy si nécessaire)
+      components/
+        ui/                   # boutons, badges, cards
+        Header.tsx
+        Footer.tsx
+        Hero.tsx
+        Lookbook.tsx
+        FeaturedCollection.tsx
+        ReassuranceBar.tsx
+        ProductCard.tsx
+        PriceWithCodNote.tsx
+        AddToCartSticky.tsx
+      lib/
+        medusa.ts             # client fetch vers API Medusa (storefront)
+        utils.ts
+      styles/
+        globals.css           # palette, tokens CSS, animations
+        theme.css             # classes utilitaires (cards, grid, overlay…)
+
+
+Gestionnaire : utilise pnpm (faster).
+pnpm-workspace.yaml doit inclure medusa-api et menow-web.
+
+2) Backend — medusa-api (MedusaJS avec COD)
+medusa-api/.env.example
+NODE_ENV=development
+PORT=9000
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME
+REDIS_URL= # (optionnel)
+JWT_SECRET=menow_dev_secret
+COOKIE_SECRET=menow_cookie_secret
+STORE_CORS=http://localhost:3000,https://*.replit.dev
+ADMIN_CORS=http://localhost:7000
+# Fichiers (optionnel): S3/Minio plus tard
+# Paiements en ligne (optionnel plus tard): STRIPE_API_KEY=
+
+medusa-api/src/config/projectConfig.ts
+
+Configure projectConfig (port, store_cors, admin_cors, database_url).
+
+Currency par défaut : EUR ; région FR.
+
+medusa-api/src/config/plugins.ts
+
+Active manual payment provider (COD)
+
+Laisse stripe commenté (à activer plus tard).
+
+Option local file service pour commencer (Cloudinary possible ensuite).
+
+medusa-api/src/loaders/…
+
+Loader DB Postgres (pg)
+
+Seed minimal : 1 collection “Capsule” + 4 produits vedettes (images factices depuis picsum.photos ou placées côté front/public).
+
+Région FR : tax incluse 20 % (config simple).
+
+medusa-api/medusa-config.js
+
+Pointez sur projectConfig et plugins ci-dessus.
+
+Comportement COD
+
+manual provider = “Paiement comptant à la livraison (France)”
+
+Quand une commande est créée avec payment_provider_id = manual :
+
+payment_status = requires_action
+
+Après encaissement (ton relais France) → via Admin/REST : capturer → payment_status = captured
+
+Expose endpoints storefront par défaut : /store/products, /store/collections, /store/carts, /store/orders
+
+3) Front — menow-web (Next.js 14, même design)
+menow-web/.env.local.example
+NEXT_PUBLIC_MEDUSA_URL=http://localhost:9000
+SITE_NAME=Menow
+SITE_URL=http://localhost:3000
+
+Composants (reprennent TON DESIGN)
+
+Header.tsx : logo 150px doré, menu, recherche (fake), badge panier.
+
+Hero.tsx : fond noir, formes dorées animées (CSS keyframes), badge “Made in Morocco” pulsant, titre “L'EXCELLENCE MAROCAINE”, sous-titre, CTA vers /collection/capsule.
+
+ReassuranceBar.tsx : badges “Fabrication marocaine”, “Livraison France”, “Retours 30j”, “Paiement comptant”.
+
+FeaturedCollection.tsx : fetch /store/products?collection_id=<id>, grille 4 cards.
+
+Lookbook.tsx : grille 3 colonnes, zoom 1.1x au survol, overlay sombre, légendes.
+
+Footer.tsx : liens CGV, Mentions légales, Confidentialité, Retours.
+
+AddToCartSticky.tsx : apparaît quand le bouton ATC natif sort du viewport.
+
+Pages
+
+app/page.tsx : assemble Hero → Reassurance → FeaturedCollection → Lookbook
+
+app/produit/[handle]/page.tsx : PDP (galerie img, prix, bouton “Ajouter au panier”, note “Paiement comptant disponible”)
+
+app/collection/[handle]/page.tsx : PLP simple (grille, tri basique)
+
+Styles
+
+styles/globals.css : import Google Fonts (Playfair Display, Inter)
+
+styles/theme.css : variables CSS (palette), composants .button, .badge, .card, .grid, focus visibles, transitions
+
+Lib
+
+lib/medusa.ts : utilitaire fetch (GET/POST) vers NEXT_PUBLIC_MEDUSA_URL (storefront API)
+
+api/cart/route.ts : endpoints Next proxy (POST /cart, POST /cart/add) si CORS pose souci
+
+4) Scripts racine & démarrage
+package.json (racine)
+
+Scripts :
+
+"dev": "concurrently -k -n medusa,web -c yellow,cyan \"pnpm --filter medusa-api dev\" \"pnpm --filter menow-web dev\""
+
+"build": "pnpm -r build"
+
+"start": "pnpm --filter medusa-api start & pnpm --filter menow-web start"
+
+Dépendances dev : concurrently, pnpm ready
+
+Commandes attendues (documente-les dans README) :
+# 1) Install
+pnpm install
+
+# 2) Config .envs
+cp medusa-api/.env.example medusa-api/.env
+cp menow-web/.env.local.example menow-web/.env.local
+# Remplir DATABASE_URL (Neon/Supabase) & NEXT_PUBLIC_MEDUSA_URL
+
+# 3) Démarrer (API + Front)
+pnpm dev
+# API: http://localhost:9000 , WEB: http://localhost:3000
+
+# 4) Seed minimal (si script fourni)
+pnpm --filter medusa-api seed
+
+5) README (à générer)
+
+Inclure :
+
+Contexte Menow & design conservé
+
+Architecture (Medusa API + Next.js front)
+
+COD : comment ça marche (manual provider) & comment capturer après encaissement
+
+Paiement en ligne (optionnel) : comment activer Stripe (plugins Medusa + env)
+
+Hébergement Replit Deployments (résumé) + DB Postgres (Neon EU) + Cloudinary (si on passe aux uploads)
+
+RGPD : DB EU, pages légales incluses
+
+6) Acceptation (checklist)
+
+✅ API Medusa démarre, expose /store/products, /store/collections, /store/carts
+
+✅ manual payment provider activé (libellé “Paiement comptant à la livraison (France)”)
+
+✅ Front Next.js 14 lance la HOME identique (Hero, Reassurance, Featured products, Lookbook)
+
+✅ PDP avec note “Paiement comptant disponible” + barre sticky Add-To-Cart
+
+✅ Footer : CGV, Mentions légales, RGPD, Retours (placeholders FR)
+
+✅ Palette/typo/animations = identiques à la version Shopify
+
+✅ Scripts pnpm dev (monorepo) fonctionnent en local/Replit
+
+✅ README clair
+
+7) Détails de code à produire maintenant
+
+Arborescence complète du monorepo
+
+Tous les fichiers listés (config, env.example, loaders, pages, composants, styles) remplis et commentés
+
+Seed minimal de 4 produits (titre, prix EUR, images) et 1 collection “Capsule”
+
+Libellés FR côté front : “Paiement comptant disponible”, “Fabriqué au Maroc”, etc.
+
+Aucun changement de design par rapport à la version Shopify (mêmes couleurs, layout, effets)
+
+Commence à écrire l’arborescence, puis fournis les fichiers un par un (titres + code).
+Évite toute intégration externe non demandée (pas d’analytics, pas d’app tiers).
+Code propre, typé (TS côté Next), accessibilité de base, SEO minima (title/desc, OG par défaut).
+
+Rends tout maintenant, prêt à exécuter.

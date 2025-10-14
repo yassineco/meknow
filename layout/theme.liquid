@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  {%- if page_description -%}
+    <meta name="description" content="{{ page_description | escape }}">
+  {%- endif -%}
+
+  <link rel="canonical" href="{{ canonical_url }}">
+
+  {%- if settings.favicon != blank -%}
+    <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+  {%- endif -%}
+
+  {%- liquid
+    assign og_title = page_title | default: shop.name
+    assign og_description = page_description | default: shop.description | default: shop.name
+    if request.page_type == 'product'
+      assign og_image = product.featured_image | image_url: width: 1200
+    elsif settings.og_image_default
+      assign og_image = settings.og_image_default | image_url: width: 1200
+    else
+      assign og_image = shop.brand.logo | image_url: width: 1200
+    endif
+  -%}
+
+  <meta property="og:site_name" content="{{ shop.name }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:title" content="{{ og_title | escape }}">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="{{ og_description | escape }}">
+  {%- if og_image -%}
+    <meta property="og:image" content="https:{{ og_image }}">
+    <meta property="og:image:secure_url" content="https:{{ og_image }}">
+  {%- endif -%}
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ og_title | escape }}">
+  <meta name="twitter:description" content="{{ og_description | escape }}">
+
+  <title>{{ page_title }}{% if current_tags %} &ndash; {{ 'general.meta.tags' | t: tags: current_tags.first }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}</title>
+
+  <script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "Organization",
+    "name": {{ shop.name | json }},
+    "url": {{ shop.url | append: page.url | json }},
+    {% if settings.logo %}
+      "logo": {{ settings.logo | image_url: width: 500 | prepend: "https:" | json }},
+    {% endif %}
+    "sameAs": [
+      {{ settings.social_twitter | json }},
+      {{ settings.social_facebook | json }},
+      {{ settings.social_instagram | json }}
+    ]
+  }
+  </script>
+
+  {{ content_for_header }}
+
+  <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
+  <script src="{{ 'sticky-atc.js' | asset_url }}" defer></script>
+</head>
+
+<body class="template-{{ request.page_type }}">
+  <a class="skip-to-content-link button visually-hidden" href="#MainContent">
+    {{ 'accessibility.skip_to_text' | t }}
+  </a>
+
+  <header class="header" role="banner">
+    <div class="header__inner">
+      {%- if settings.logo != blank -%}
+        <a href="{{ routes.root_url }}" class="header__logo">
+          <img
+            src="{{ settings.logo | image_url: width: settings.logo_width }}"
+            alt="{{ shop.name }}"
+            loading="lazy"
+            width="{{ settings.logo_width }}"
+            height="auto"
+          >
+        </a>
+      {%- else -%}
+        <a href="{{ routes.root_url }}" class="header__logo-text">
+          <h1>{{ shop.name }}</h1>
+        </a>
+      {%- endif -%}
+
+      <nav class="header__nav" role="navigation" aria-label="Main navigation">
+        <ul class="nav-list">
+          {% for link in linklists.main-menu.links %}
+            <li>
+              <a href="{{ link.url }}" {% if link.active %}aria-current="page"{% endif %}>
+                {{ link.title }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+
+      <div class="header__icons">
+        <a href="{{ routes.search_url }}" aria-label="Rechercher">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+            <path d="M12.5 12.5L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </a>
+        <a href="{{ routes.cart_url }}" aria-label="Panier">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M1 1h3l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L22 6H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="cart-count">{{ cart.item_count }}</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="MainContent" role="main">
+    {{ content_for_layout }}
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer__content">
+      <div class="footer__section">
+        <h3>ME NOW</h3>
+        <p>Prêt-à-porter de qualité fabriqué au Maroc, expédié depuis la France.</p>
+      </div>
+
+      <div class="footer__section">
+        <h3>Informations légales</h3>
+        <ul>
+          <li><a href="{{ pages.cgv.url }}">Conditions Générales de Vente</a></li>
+          <li><a href="{{ pages.mentions-legales.url }}">Mentions Légales</a></li>
+          <li><a href="{{ pages.confidentialite.url }}">Politique de Confidentialité</a></li>
+          <li><a href="{{ pages.retours.url }}">Retours & Remboursements</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__section">
+        <h3>Suivez-nous</h3>
+        <div class="footer__social">
+          {%- if settings.social_instagram != blank -%}
+            <a href="{{ settings.social_instagram }}" aria-label="Instagram" target="_blank" rel="noopener">Instagram</a>
+          {%- endif -%}
+          {%- if settings.social_facebook != blank -%}
+            <a href="{{ settings.social_facebook }}" aria-label="Facebook" target="_blank" rel="noopener">Facebook</a>
+          {%- endif -%}
+          {%- if settings.social_twitter != blank -%}
+            <a href="{{ settings.social_twitter }}" aria-label="Twitter" target="_blank" rel="noopener">Twitter</a>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <p>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. Tous droits réservés.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero-video",
+      "settings": {
+        "title": "ME NOW",
+        "subtitle": "Prêt-à-porter premium fabriqué au Maroc",
+        "badge_text": "Made in Morocco",
+        "button_label": "Découvrir la collection",
+        "button_link": "/collections/all",
+        "button_label_2": "Notre histoire",
+        "button_link_2": "/pages/about"
+      }
+    },
+    "lookbook": {
+      "type": "lookbook-grid",
+      "blocks": {
+        "lookbook-1": {
+          "type": "lookbook_item",
+          "settings": {
+            "title": "Nouvelle Collection",
+            "subtitle": "Automne/Hiver 2025"
+          }
+        },
+        "lookbook-2": {
+          "type": "lookbook_item",
+          "settings": {
+            "title": "Essentiels",
+            "subtitle": "Intemporels"
+          }
+        },
+        "lookbook-3": {
+          "type": "lookbook_item",
+          "settings": {
+            "title": "Accessoires",
+            "subtitle": "Complétez votre look"
+          }
+        }
+      },
+      "block_order": [
+        "lookbook-1",
+        "lookbook-2",
+        "lookbook-3"
+      ],
+      "settings": {
+        "title": "Nos Collections"
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "title": "Produits vedettes",
+        "description": "Découvrez nos pièces les plus populaires",
+        "products_to_show": 4,
+        "button_label": "Voir toute la collection"
+      }
+    },
+    "reassurance": {
+      "type": "reassurance-bar",
+      "settings": {}
+    },
+    "story": {
+      "type": "rich-text",
+      "settings": {
+        "title": "L'excellence marocaine",
+        "text": "<p>ME NOW incarne l'excellence du savoir-faire marocain dans le prêt-à-porter. Chaque pièce est conçue avec passion et attention aux détails, alliant tradition artisanale et modernité.</p>",
+        "color_scheme": "dark",
+        "button_label": "Notre histoire",
+        "button_link": "/pages/about"
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "lookbook",
+    "featured",
+    "reassurance",
+    "story"
+  ]
+}

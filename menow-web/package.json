@@ -1,0 +1,31 @@
+{
+  "name": "meknow-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Menow - Frontend Next.js 14 (App Router)",
+  "scripts": {
+    "dev": "next dev --port 5000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "clean": "rm -rf .next out"
+  },
+  "dependencies": {
+    "@medusajs/js-sdk": "^2.10.3",
+    "@medusajs/types": "^2.10.3",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "next": "^14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,26 @@
+<div class="badges-reassurance">
+  {%- if settings.show_cod_badge -%}
+    <span class="badge">{{ settings.cod_note | default: 'Paiement à la livraison' }}</span>
+  {%- endif -%}
+  
+  {%- if settings.show_return_badge -%}
+    <span class="badge">Retour 14 jours</span>
+  {%- endif -%}
+  
+  {%- if settings.show_shipping_badge -%}
+    <span class="badge">Expédié depuis France</span>
+  {%- endif -%}
+  
+  {%- if settings.show_made_morocco_badge -%}
+    <span class="badge badge--premium">Made in Morocco</span>
+  {%- endif -%}
+</div>
+
+<style>
+  .badges-reassurance {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: var(--spacing-sm) 0;
+  }
+</style>

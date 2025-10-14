@@ -1,0 +1,182 @@
+<style>
+  .hero-video {
+    position: relative;
+    min-height: clamp(400px, 80vh, 800px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .hero-video__media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+  
+  .hero-video__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(11,11,12,0.3) 0%, rgba(11,11,12,0.7) 100%);
+    z-index: 1;
+  }
+  
+  .hero-video__content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    padding: var(--spacing-md);
+  }
+  
+  .hero-video__badge {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .hero-video__title {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+  .hero-video__subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .hero-video__cta {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>
+
+<div class="hero-video">
+  {%- if section.settings.video_url != blank -%}
+    <video
+      class="hero-video__media"
+      autoplay
+      muted
+      loop
+      playsinline
+      aria-hidden="true"
+    >
+      <source src="{{ section.settings.video_url }}" type="video/mp4">
+    </video>
+  {%- elsif section.settings.image != blank -%}
+    <img
+      class="hero-video__media"
+      src="{{ section.settings.image | image_url: width: 1920 }}"
+      alt="{{ section.settings.image.alt | escape }}"
+      loading="lazy"
+      width="1920"
+      height="1080"
+    >
+  {%- endif -%}
+  
+  <div class="hero-video__overlay"></div>
+  
+  <div class="hero-video__content">
+    {%- if settings.show_made_morocco_badge -%}
+      <div class="hero-video__badge">
+        <span class="badge badge--premium">{{ section.settings.badge_text | default: 'Made in Morocco' }}</span>
+      </div>
+    {%- endif -%}
+    
+    {%- if section.settings.title != blank -%}
+      <h2 class="hero-video__title">{{ section.settings.title }}</h2>
+    {%- endif -%}
+    
+    {%- if section.settings.subtitle != blank -%}
+      <p class="hero-video__subtitle">{{ section.settings.subtitle }}</p>
+    {%- endif -%}
+    
+    {%- if section.settings.button_label != blank -%}
+      <div class="hero-video__cta">
+        <a href="{{ section.settings.button_link | default: '#' }}" class="button">
+          {{ section.settings.button_label }}
+        </a>
+        {%- if section.settings.button_label_2 != blank -%}
+          <a href="{{ section.settings.button_link_2 | default: '#' }}" class="button button--ghost">
+            {{ section.settings.button_label_2 }}
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Hero Vidéo",
+  "settings": [
+    {
+      "type": "url",
+      "id": "video_url",
+      "label": "URL de la vidéo MP4",
+      "info": "URL complète d'une vidéo MP4 hébergée"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image de secours",
+      "info": "Affichée si pas de vidéo"
+    },
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Texte du badge",
+      "default": "Made in Morocco"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "ME NOW"
+    },
+    {
+      "type": "textarea",
+      "id": "subtitle",
+      "label": "Sous-titre",
+      "default": "Prêt-à-porter premium fabriqué au Maroc"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Texte du bouton principal",
+      "default": "Découvrir la collection"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Lien du bouton principal"
+    },
+    {
+      "type": "text",
+      "id": "button_label_2",
+      "label": "Texte du bouton secondaire"
+    },
+    {
+      "type": "url",
+      "id": "button_link_2",
+      "label": "Lien du bouton secondaire"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Vidéo"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,171 @@
+Tu es un expert Shopify/Liquid qui travaille dans Replit.
+Objectif : générer un thème Shopify complet pour la marque ME NOW, prêt à être déployé via Shopify CLI.
+Le site doit être premium, tape-à-l’œil, thème noir, avec mise en avant du paiement à la livraison (COD en France).
+
+Contexte & contraintes
+
+Marque : ME NOW — prêt-à-porter fabriqué au Maroc, expédié via contact en France.
+
+Design :
+
+Fond sombre (#0B0B0C, #121214)
+
+Texte clair (#F3F3F3, #B5B5B5)
+
+Accent or (#F2C14E)
+
+Bordures (#1E1E22)
+
+Pages légales FR obligatoires : CGV, Mentions légales, Confidentialité/RGPD, Retours.
+
+Réassurance : “Paiement à la livraison (France)”, “Retour 14 jours”, “Expédié depuis la France”, “Made in Morocco”.
+
+Paiement COD : côté Shopify → Paiements manuels activés, côté front → afficher instructions claires.
+
+Accessibilité & SEO : alt images, focus visibles, meta title/desc dynamiques, OG par défaut.
+
+À générer (structure complète)
+menow-theme/
+  README.md
+  package.json
+  .gitignore
+  .replit
+  replit.nix
+  config/
+    settings_schema.json
+  layout/
+    theme.liquid
+  assets/
+    base.css
+    sticky-atc.js
+  sections/
+    hero-video.liquid
+    lookbook-grid.liquid
+    reassurance-bar.liquid
+    featured-collection.liquid
+    rich-text.liquid
+  snippets/
+    badges-reassurance.liquid
+    price-with-cod-note.liquid
+  templates/
+    index.json
+    product.json
+    collection.json
+    page.json
+    search.json
+
+Détails fichier par fichier
+1. package.json
+
+Scripts :
+
+"dev": "shopify theme dev --live-reload"
+
+"push": "shopify theme push"
+
+"check": "shopify theme check"
+
+"fmt": "prettier -w '**/*.{liquid,json,css,js,md}'"
+
+Dépendance dev : prettier
+
+2. .replit
+
+Lance npm run dev par défaut.
+
+3. replit.nix
+
+Inclut Node.js (>=18), npm, @shopify/cli, @shopify/theme.
+
+4. config/settings_schema.json
+
+Variables couleurs, logo, favicon, image OG par défaut.
+
+Options pour activer/désactiver badges de réassurance et texte délai livraison.
+
+5. layout/theme.liquid
+
+Head : meta dynamiques (title/desc), OG tags, JSON-LD org.
+
+Import base.css, header simple (logo/menu), footer (pages légales).
+
+6. assets/base.css
+
+Palette via :root.
+
+Composants : .button, .button--ghost, .badge, .card, .header, .footer.
+
+Responsive avec clamp().
+
+Focus visibles, hover doux.
+
+7. assets/sticky-atc.js
+
+Script qui affiche une barre “Ajouter au panier” collante quand le bloc ATC sort du viewport sur PDP.
+
+8. Sections
+
+hero-video.liquid → vidéo MP4 paramétrable, overlay, titre, sous-titre, CTA, badge Fabriqué au Maroc.
+
+lookbook-grid.liquid → grille 3×N images cliquables (collection lookbook).
+
+reassurance-bar.liquid → badges dynamiques depuis settings.
+
+featured-collection.liquid → produits vedettes avec pagination.
+
+rich-text.liquid → storytelling (texte, titre, bouton).
+
+9. Snippets
+
+badges-reassurance.liquid → petits badges pour PDP/PLP.
+
+price-with-cod-note.liquid → prix + note “Paiement à la livraison disponible en France”.
+
+10. Templates JSON
+
+index.json : assemble Hero + Lookbook + Produits + Réassurance.
+
+product.json : galerie, tailles, badges réassurance, sticky ATC.
+
+collection.json : listing produits avec tri/pagination.
+
+page.json : pages légales.
+
+search.json : résultats de recherche simples.
+
+11. README.md
+
+Explication contexte ME NOW.
+
+Prérequis : Shopify CLI installé.
+
+Commandes :
+
+npm install
+shopify login --store <ma-boutique>.myshopify.com
+npm run dev     # dev live
+npm run push    # push vers Shopify
+npm run check   # validation du thème
+
+
+Où éditer couleurs (settings_schema.json), textes COD, pages légales.
+
+Rappel : activer Paiement manuel → Paiement à la livraison (France) dans Shopify Admin.
+
+Acceptation
+
+Projet s’exécute sur Replit avec npm run dev.
+
+Thème fonctionne dans Shopify (édition sections depuis l’admin).
+
+Home : Hero vidéo + Lookbook + Produits + Réassurance.
+
+PDP : galerie + sticky ATC + badges.
+
+Badges réassurance paramétrables.
+
+SEO/Accessibilité OK.
+
+Documentation claire dans README.
+
+⚡ Génère maintenant l’arborescence complète + tous les fichiers remplis (code complet, commenté, prêt à tourner).

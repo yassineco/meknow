@@ -1,0 +1,173 @@
+<style>
+  .featured-collection {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  
+  .featured-collection__header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .featured-collection__title {
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .featured-collection__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .product-card {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+  
+  .product-card:hover {
+    border-color: var(--color-accent);
+    transform: translateY(-4px);
+  }
+  
+  .product-card__image-wrapper {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+  }
+  
+  .product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  
+  .product-card:hover .product-card__image {
+    transform: scale(1.05);
+  }
+  
+  .product-card__badge {
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+  }
+  
+  .product-card__info {
+    padding: var(--spacing-sm);
+  }
+  
+  .product-card__title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-primary);
+  }
+  
+  .product-card__price {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+</style>
+
+<div class="featured-collection section">
+  {%- if section.settings.title != blank -%}
+    <div class="featured-collection__header">
+      <h2 class="featured-collection__title">{{ section.settings.title }}</h2>
+      {%- if section.settings.description != blank -%}
+        <p>{{ section.settings.description }}</p>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+  
+  {%- liquid
+    assign collection = collections[section.settings.collection]
+    assign products_to_show = section.settings.products_to_show | default: 4
+  -%}
+  
+  <div class="featured-collection__grid">
+    {%- for product in collection.products limit: products_to_show -%}
+      <a href="{{ product.url }}" class="product-card">
+        <div class="product-card__image-wrapper">
+          {%- if product.featured_image -%}
+            <img
+              class="product-card__image"
+              src="{{ product.featured_image | image_url: width: 600 }}"
+              alt="{{ product.featured_image.alt | default: product.title | escape }}"
+              loading="lazy"
+              width="600"
+              height="800"
+            >
+          {%- endif -%}
+          
+          {%- if settings.show_made_morocco_badge -%}
+            <div class="product-card__badge">
+              <span class="badge badge--premium">Made in Morocco</span>
+            </div>
+          {%- endif -%}
+        </div>
+        
+        <div class="product-card__info">
+          <h3 class="product-card__title">{{ product.title }}</h3>
+          <div class="product-card__price">
+            {{ product.price | money }}
+          </div>
+        </div>
+      </a>
+    {%- endfor -%}
+  </div>
+  
+  {%- if section.settings.button_label != blank -%}
+    <div style="text-align: center; margin-top: var(--spacing-lg);">
+      <a href="{{ collection.url }}" class="button">{{ section.settings.button_label }}</a>
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Collection vedette",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "Nos produits vedettes"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "label": "Nombre de produits",
+      "default": 4
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Texte du bouton",
+      "default": "Voir toute la collection"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collection vedette"
+    }
+  ]
+}
+{% endschema %}

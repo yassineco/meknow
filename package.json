@@ -1,0 +1,36 @@
+{
+  "name": "menow-medusa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo Menow - MedusaJS API + Next.js Frontend",
+  "scripts": {
+    "dev": "concurrently -k -n medusa,web -c yellow,cyan \"pnpm --filter medusa-api dev\" \"pnpm --filter menow-web dev\"",
+    "build": "pnpm -r build",
+    "start": "pnpm --filter medusa-api start & pnpm --filter menow-web start",
+    "seed": "pnpm --filter medusa-api seed:custom",
+    "user:create": "pnpm --filter medusa-api user:create",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@medusajs/admin": "^7.1.18",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "postcss": "^8.5.6"
+  },
+  "pnpm": {
+    "overrides": {
+      "@medusajs/modules-sdk": "1.12.11"
+    }
+  },
+  "main": "backend-minimal.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

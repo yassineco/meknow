@@ -1,0 +1,235 @@
+Tu es un développeur expert MedusaJS.
+Objectif : configurer et lancer Menow, un site e-commerce MedusaJS + Next.js, déjà structuré avec design premium noir (Hero, Lookbook, COD).
+Tu dois :
+1️⃣ Configurer la base Postgres et les environnements.
+2️⃣ Activer le paiement à la livraison (manual provider).
+3️⃣ Générer un jeu de données de test (collection + 4 produits).
+4️⃣ Préparer les commandes COD et le script de capture.
+5️⃣ Documenter la procédure dans un README clair.
+
+1) Configuration des environnements
+Crée et remplis ces fichiers (si non présents) :
+medusa-api/.env.example
+NODE_ENV=development
+PORT=9000
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME
+STORE_CORS=http://localhost:3000
+ADMIN_CORS=http://localhost:7000
+JWT_SECRET=menow_dev_secret
+COOKIE_SECRET=menow_cookie_secret
+
+menow-web/.env.local.example
+NEXT_PUBLIC_MEDUSA_URL=http://localhost:9000
+SITE_NAME=Menow
+SITE_URL=http://localhost:3000
+
+Ajoute la commande setup dans le README :
+cp medusa-api/.env.example medusa-api/.env
+cp menow-web/.env.local.example menow-web/.env.local
+
+2) Activer le paiement COD (“manual provider”)
+
+Dans medusa-api/src/config/plugins.ts :
+
+const plugins = [
+  {
+    resolve: `manual`,
+    options: {
+      name: "Paiement comptant à la livraison (France)",
+    },
+  },
+  // Stripe optionnel plus tard :
+  // {
+  //   resolve: `medusa-payment-stripe`,
+  //   options: {
+  //     api_key: process.env.STRIPE_API_KEY,
+  //   },
+  // },
+];
+export default plugins;
+
+3) Script de seed initial (medusa-api/src/scripts/seed-menow.ts)
+
+Crée un script seed qui injecte :
+
+1 collection “Capsule”
+
+4 produits premium (cuir, denim, coton, lin)
+
+1 région France (EUR, TVA 20 %)
+
+Active le provider manual
+
+import { Medusa } from "@medusajs/medusa-js"
+import dotenv from "dotenv"
+dotenv.config()
+
+const medusa = new Medusa({ baseUrl: "http://localhost:9000", maxRetries: 3 })
+
+async function seed() {
+  try {
+    console.log("🌿 Seeding Menow data...")
+
+    // 1️⃣ Région France
+    const region = await medusa.admin.regions.create({
+      name: "France",
+      currency_code: "eur",
+      tax_rate: 20,
+      countries: ["fr"],
+      payment_providers: ["manual"],
+      fulfillment_providers: [],
+    })
+    console.log("✅ Région FR créée :", region.id)
+
+    // 2️⃣ Collection
+    const collection = await medusa.admin.collections.create({
+      title: "Capsule Menow",
+      handle: "capsule",
+    })
+    console.log("✅ Collection :", collection.id)
+
+    // 3️⃣ Produits
+    const produits = [
+      {
+        title: "Veste en cuir noir premium",
+        description: "Cuir véritable marocain, doublure soie, finition main.",
+        handle: "veste-cuir-noir",
+        type: { value: "veste" },
+        collection_id: collection.id,
+        options: [{ title: "Taille" }],
+        variants: [{ title: "Taille M", prices: [{ currency_code: "eur", amount: 39000 }] }],
+        images: ["https://picsum.photos/id/1062/800/1000"],
+      },
+      {
+        title: "Blouson denim brut",
+        description: "Denim marocain tissé main, coupe structurée.",
+        handle: "blouson-denim",
+        type: { value: "blouson" },
+        collection_id: collection.id,
+        options: [{ title: "Taille" }],
+        variants: [{ title: "Taille L", prices: [{ currency_code: "eur", amount: 21000 }] }],
+        images: ["https://picsum.photos/id/1059/800/1000"],
+      },
+      {
+        title: "Chemise lin naturel",
+        description: "Tissu lin léger, confection artisanale à Casablanca.",
+        handle: "chemise-lin",
+        type: { value: "chemise" },
+        collection_id: collection.id,
+        options: [{ title: "Taille" }],
+        variants: [{ title: "Taille M", prices: [{ currency_code: "eur", amount: 8900 }] }],
+        images: ["https://picsum.photos/id/1003/800/1000"],
+      },
+      {
+        title: "Pantalon coupe droite coton bio",
+        description: "Coton bio filé à Marrakech, confort et durabilité.",
+        handle: "pantalon-coton-bio",
+        type: { value: "pantalon" },
+        collection_id: collection.id,
+        options: [{ title: "Taille" }],
+        variants: [{ title: "Taille 42", prices: [{ currency_code: "eur", amount: 15900 }] }],
+        images: ["https://picsum.photos/id/1037/800/1000"],
+      },
+    ]
+
+    for (const p of produits) {
+      const created = await medusa.admin.products.create(p)
+      console.log("✅ Produit :", created.id, "-", created.title)
+    }
+
+    console.log("🌱 Seed terminé avec succès ✅")
+  } catch (err) {
+    console.error("❌ Erreur seed :", err)
+  }
+}
+seed()
+
+
+Ajoute le script à package.json :
+
+"scripts": {
+  "seed": "ts-node src/scripts/seed-menow.ts"
+}
+
+4) Capture d’une commande COD (exemple Admin)
+
+Crée un fichier medusa-api/docs/capture-cod.md :
+
+### Exemple capture paiement à la livraison (France)
+
+1. Récupérer l’`id` du paiement :
+GET /admin/orders/<id> → "payments[0].id"
+
+2. Capturer après encaissement :
+POST /admin/payments/<PAYMENT_ID>/capture
+Headers : Authorization: Bearer <ADMIN_TOKEN>
+
+✅ Le `payment_status` passe à "captured"
+
+5) Commandes NPM globales
+
+Dans la racine du monorepo, ajoute :
+
+# Installation
+pnpm install
+
+# Lancer API + Front
+pnpm dev
+
+# Seeder les produits
+pnpm --filter medusa-api seed
+
+6) Déploiement Replit (Always-On)
+API (medusa-api)
+
+Type : Always-On
+
+Port : 9000
+
+ENV : ceux de .env
+
+CORS : http://localhost:3000, https://*.replit.dev
+
+DB : Postgres Neon/Supabase (région EU)
+
+Front (menow-web)
+
+Type : Web app
+
+Build : pnpm --filter menow-web build
+
+Run : pnpm --filter menow-web start
+
+ENV : NEXT_PUBLIC_MEDUSA_URL=https://<ton-api>.repl.co
+
+7) README final à générer
+
+📘 Étapes complètes : setup → seed → test → capture COD → déploiement.
+
+🔒 Notes RGPD : données clients hébergées en EU.
+
+⚙️ Maintenance : comment ajouter Stripe plus tard (medusa-payment-stripe).
+
+🧱 Structure du monorepo (API + Front).
+
+8) Vérifications à exécuter après génération
+
+ /store/products retourne bien 4 produits.
+
+ Front Next.js affiche la collection “Capsule” (4 produits).
+
+ Badge “Paiement comptant disponible” visible sur PDP.
+
+ Commande créée → payment_status = requires_action.
+
+ Capture manuelle fonctionne (POST /admin/payments/:id/capture).
+
+ Animations / couleurs / Hero conformes à la version Shopify.
+
+⚡ Génère maintenant :
+1️⃣ le fichier seed-menow.ts complet
+2️⃣ les scripts npm (dev, seed)
+3️⃣ la doc capture-cod.md
+4️⃣ le README clair avec toutes les étapes ci-dessus
+
+Rends tout prêt à exécuter sur Replit.

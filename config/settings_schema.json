@@ -1,0 +1,157 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "ME NOW",
+    "theme_version": "1.0.0",
+    "theme_author": "ME NOW",
+    "theme_documentation_url": "https://menow.fr",
+    "theme_support_url": "https://menow.fr/support"
+  },
+  {
+    "name": "Couleurs",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Palette de couleurs"
+      },
+      {
+        "type": "color",
+        "id": "color_bg_primary",
+        "label": "Fond principal",
+        "default": "#0B0B0C"
+      },
+      {
+        "type": "color",
+        "id": "color_bg_secondary",
+        "label": "Fond secondaire",
+        "default": "#121214"
+      },
+      {
+        "type": "color",
+        "id": "color_text_primary",
+        "label": "Texte principal",
+        "default": "#F3F3F3"
+      },
+      {
+        "type": "color",
+        "id": "color_text_secondary",
+        "label": "Texte secondaire",
+        "default": "#B5B5B5"
+      },
+      {
+        "type": "color",
+        "id": "color_accent",
+        "label": "Accent (Or)",
+        "default": "#F2C14E"
+      },
+      {
+        "type": "color",
+        "id": "color_border",
+        "label": "Bordures",
+        "default": "#1E1E22"
+      }
+    ]
+  },
+  {
+    "name": "Logo & Identité",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo"
+      },
+      {
+        "type": "range",
+        "id": "logo_width",
+        "min": 50,
+        "max": 300,
+        "step": 10,
+        "unit": "px",
+        "label": "Largeur du logo",
+        "default": 150
+      },
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon"
+      }
+    ]
+  },
+  {
+    "name": "Réassurance",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "show_cod_badge",
+        "label": "Afficher badge COD France",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_return_badge",
+        "label": "Afficher badge Retour 14 jours",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_shipping_badge",
+        "label": "Afficher badge Expédié depuis France",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_made_morocco_badge",
+        "label": "Afficher badge Made in Morocco",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "delivery_delay",
+        "label": "Délai de livraison",
+        "default": "3-5 jours ouvrés"
+      }
+    ]
+  },
+  {
+    "name": "SEO & Social",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "og_image_default",
+        "label": "Image Open Graph par défaut"
+      },
+      {
+        "type": "text",
+        "id": "social_twitter",
+        "label": "Twitter/X"
+      },
+      {
+        "type": "text",
+        "id": "social_instagram",
+        "label": "Instagram"
+      },
+      {
+        "type": "text",
+        "id": "social_facebook",
+        "label": "Facebook"
+      }
+    ]
+  },
+  {
+    "name": "Paiement COD",
+    "settings": [
+      {
+        "type": "richtext",
+        "id": "cod_instructions",
+        "label": "Instructions COD",
+        "default": "<p><strong>Paiement à la livraison disponible en France</strong></p><p>Payez directement au livreur en espèces ou par carte bancaire lors de la réception de votre commande.</p>"
+      },
+      {
+        "type": "text",
+        "id": "cod_note",
+        "label": "Note COD courte",
+        "default": "Paiement à la livraison disponible"
+      }
+    ]
+  }
+]

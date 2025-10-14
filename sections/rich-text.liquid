@@ -1,0 +1,103 @@
+<style>
+  .rich-text {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+  
+  .rich-text__inner {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .rich-text__title {
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .rich-text__content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .rich-text__content p {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .rich-text__button {
+    margin-top: var(--spacing-md);
+  }
+</style>
+
+<div class="rich-text section {% if section.settings.color_scheme == 'dark' %}section--dark{% endif %}">
+  <div class="rich-text__inner">
+    {%- if section.settings.title != blank -%}
+      <h2 class="rich-text__title">{{ section.settings.title }}</h2>
+    {%- endif -%}
+    
+    {%- if section.settings.text != blank -%}
+      <div class="rich-text__content">
+        {{ section.settings.text }}
+      </div>
+    {%- endif -%}
+    
+    {%- if section.settings.button_label != blank -%}
+      <div class="rich-text__button">
+        <a href="{{ section.settings.button_link | default: '#' }}" class="button">
+          {{ section.settings.button_label }}
+        </a>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Texte enrichi",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Titre",
+      "default": "Notre histoire"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Texte",
+      "default": "<p>ME NOW incarne l'excellence du savoir-faire marocain dans le prêt-à-porter. Chaque pièce est conçue avec passion et attention aux détails, alliant tradition artisanale et modernité.</p>"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "label": "Schéma de couleurs",
+      "options": [
+        {
+          "value": "light",
+          "label": "Clair"
+        },
+        {
+          "value": "dark",
+          "label": "Sombre"
+        }
+      ],
+      "default": "light"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Texte du bouton"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Lien du bouton"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Texte enrichi"
+    }
+  ]
+}
+{% endschema %}
