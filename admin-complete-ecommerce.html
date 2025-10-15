@@ -863,7 +863,11 @@
                         document.getElementById('productTitle').value = product.title;
                         document.getElementById('productDescription').value = product.description;
                         document.getElementById('productPrice').value = product.variants[0].prices[0].amount / 100;
-                        document.getElementById('productStock').value = product.variants[0].inventory_quantity;
+                        
+                        // Remplir les stocks par taille
+                        if (product.variants.length >= 1) document.getElementById('stockS').value = product.variants[0].inventory_quantity;
+                        if (product.variants.length >= 2) document.getElementById('stockM').value = product.variants[1].inventory_quantity;
+                        if (product.variants.length >= 3) document.getElementById('stockL').value = product.variants[2].inventory_quantity;
                         
                         // Afficher l'image actuelle si elle existe
                         if (product.thumbnail) {
@@ -894,7 +898,7 @@
                     if (data.success) {
                         showNotification(data.message, 'success');
                         loadProducts(); // Recharger la liste
-                        loadDashboardStats(); // Mettre à jour les stats
+                        loadDashboard(); // Mettre à jour les stats
                     } else {
                         showNotification('Erreur lors de la suppression: ' + data.error, 'error');
                     }
@@ -1068,7 +1072,7 @@
                     showNotification(`✅ Produit "${productData.title}" ${action} avec succès!`, 'success');
                     closeProductModal();
                     loadProducts();
-                    loadDashboardStats();
+                    loadDashboard();
                 } else {
                     showNotification(`❌ Erreur lors de la ${isEditing ? 'modification' : 'création'}: ${data.error}`, 'error');
                 }
