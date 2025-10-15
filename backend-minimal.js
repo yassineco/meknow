@@ -438,6 +438,24 @@ app.get('/api/products', (req, res) => {
   });
 });
 
+// Route pour obtenir un produit spécifique
+app.get('/api/products/:id', (req, res) => {
+  console.log(`📦 API - GET /api/products/${req.params.id}`);
+  
+  const product = products.find(p => p.id === req.params.id);
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      error: 'Produit non trouvé'
+    });
+  }
+  
+  res.json({
+    success: true,
+    product
+  });
+});
+
 // Route pour créer un nouveau produit
 app.post('/api/products', (req, res) => {
   console.log('📦 API - POST /api/products', req.body);

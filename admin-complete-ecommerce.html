@@ -639,6 +639,59 @@
             }
         }
 
+        function showNotification(message, type = 'info') {
+            // Créer la notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            
+            // Couleurs selon le type
+            switch(type) {
+                case 'success':
+                    notification.style.backgroundColor = '#28a745';
+                    break;
+                case 'error':
+                    notification.style.backgroundColor = '#dc3545';
+                    break;
+                case 'warning':
+                    notification.style.backgroundColor = '#ffc107';
+                    notification.style.color = '#000';
+                    break;
+                default:
+                    notification.style.backgroundColor = '#007bff';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animation d'entrée
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Suppression automatique après 4 secondes
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
         function toggleDebug() {
             debugEnabled = !debugEnabled;
             const console = document.getElementById('debugConsole');
@@ -797,14 +850,59 @@
 
         function editProduct(productId) {
             debugLog(`Opening edit modal for product: ${productId}`);
-            // Implementation for editing existing products
-            alert('Modification de produit - Fonctionnalité en cours de développement');
+            
+            // Récupérer les données du produit
+            fetch(`/api/products/${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const product = data.product;
+                        currentEditingProduct = productId;
+                        
+                        // Remplir le formulaire avec les données existantes
+                        document.getElementById('productTitle').value = product.title;
+                        document.getElementById('productDescription').value = product.description;
+                        document.getElementById('productPrice').value = product.variants[0].prices[0].amount / 100;
+                        document.getElementById('productStock').value = product.variants[0].inventory_quantity;
+                        
+                        // Afficher l'image actuelle si elle existe
+                        if (product.thumbnail) {
+                            const preview = document.getElementById('imagePreview');
+                            preview.src = product.thumbnail;
+                            preview.style.display = 'block';
+                        }
+                        
+                        // Changer le titre du modal
+                        document.getElementById('modalTitle').textContent = '✏️ Modifier Produit';
+                        document.getElementById('productModal').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    debugLog('Erreur lors du chargement du produit:', error);
+                    showNotification('Erreur lors du chargement du produit', 'error');
+                });
         }
 
         function deleteProduct(productId) {
             debugLog(`Delete request for product: ${productId}`);
             if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-                alert('Suppression de produit - Fonctionnalité en cours de développement');
+                fetch(`/api/products/${productId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        loadProducts(); // Recharger la liste
+                        loadDashboardStats(); // Mettre à jour les stats
+                    } else {
+                        showNotification('Erreur lors de la suppression: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    debugLog('Erreur lors de la suppression:', error);
+                    showNotification('Erreur lors de la suppression', 'error');
+                });
             }
         }
 
@@ -821,6 +919,7 @@
             document.getElementById('uploadContent').style.display = 'block';
             document.getElementById('imageInfo').innerHTML = '';
             uploadedImageUrl = null;
+            currentEditingProduct = null;
         }
 
         // Stock modal functions
@@ -919,7 +1018,10 @@
             e.preventDefault();
             debugLog('Product form submission started');
             
-            if (!uploadedImageUrl) {
+            const isEditing = currentEditingProduct !== null;
+            
+            // Pour la modification, l'image n'est pas obligatoire (on peut garder l'ancienne)
+            if (!isEditing && !uploadedImageUrl) {
                 alert('❌ Veuillez d\'abord uploader une image');
                 return;
             }
@@ -927,7 +1029,6 @@
             const productData = {
                 title: document.getElementById('productTitle').value,
                 description: document.getElementById('productDescription').value,
-                imageUrl: uploadedImageUrl,
                 price: parseFloat(document.getElementById('productPrice').value),
                 category: document.getElementById('productCategory').value,
                 status: document.getElementById('productStatus').value,
@@ -938,34 +1039,43 @@
                 }
             };
 
+            // Ajouter l'image seulement si une nouvelle a été uploadée
+            if (uploadedImageUrl) {
+                productData.imageUrl = uploadedImageUrl;
+            }
+
             debugLog(`Sending product data: ${JSON.stringify(productData)}`);
 
-            fetch('/api/products', {
-                method: 'POST',
+            const url = isEditing ? `/api/products/${currentEditingProduct}` : '/api/products';
+            const method = isEditing ? 'PUT' : 'POST';
+            const action = isEditing ? 'modifié' : 'créé';
+
+            fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(productData)
             })
             .then(response => {
-                debugLog(`Product creation response status: ${response.status}`);
+                debugLog(`Product ${action} response status: ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                debugLog(`Product creation response: ${JSON.stringify(data)}`);
+                debugLog(`Product ${action} response: ${JSON.stringify(data)}`);
                 
                 if (data.success) {
-                    alert(`✅ Produit "${productData.title}" créé avec succès!`);
+                    showNotification(`✅ Produit "${productData.title}" ${action} avec succès!`, 'success');
                     closeProductModal();
                     loadProducts();
-                    loadDashboard();
+                    loadDashboardStats();
                 } else {
-                    alert(`❌ Erreur lors de la création: ${data.error}`);
+                    showNotification(`❌ Erreur lors de la ${isEditing ? 'modification' : 'création'}: ${data.error}`, 'error');
                 }
             })
             .catch(error => {
-                debugLog(`Product creation error: ${error.message}`);
-                alert(`❌ Erreur de connexion: ${error.message}`);
+                debugLog(`Product ${action} error: ${error.message}`);
+                showNotification(`❌ Erreur de connexion: ${error.message}`, 'error');
             });
         });
 
