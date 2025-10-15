@@ -460,7 +460,7 @@ app.get('/api/products/:id', (req, res) => {
 app.post('/api/products', (req, res) => {
   console.log('📦 API - POST /api/products', req.body);
   
-  const { title, description, imageUrl } = req.body;
+  const { title, description, imageUrl, price, variants } = req.body;
   
   if (!title || !imageUrl) {
     return res.status(400).json({
@@ -471,6 +471,38 @@ app.post('/api/products', (req, res) => {
   
   // Générer un ID unique
   const productId = `prod_${Date.now()}_${Math.round(Math.random() * 1000)}`;
+  
+  // Convertir le prix en centimes
+  const priceInCents = price ? Math.round(price * 100) : 9900;
+  
+  // Créer les variants à partir des données du formulaire
+  const productVariants = [];
+  if (variants && typeof variants === 'object') {
+    Object.entries(variants).forEach(([size, quantity]) => {
+      productVariants.push({
+        id: `variant_${productId}_${size.toLowerCase()}`,
+        title: size,
+        sku: `${productId.toUpperCase()}-${size}`,
+        inventory_quantity: parseInt(quantity) || 0,
+        manage_inventory: true,
+        allow_backorder: false,
+        prices: [{ amount: priceInCents, currency_code: "eur" }]
+      });
+    });
+  } else {
+    // Variants par défaut si non spécifiés
+    ['S', 'M', 'L'].forEach(size => {
+      productVariants.push({
+        id: `variant_${productId}_${size.toLowerCase()}`,
+        title: size,
+        sku: `${productId.toUpperCase()}-${size}`,
+        inventory_quantity: 10,
+        manage_inventory: true,
+        allow_backorder: false,
+        prices: [{ amount: priceInCents, currency_code: "eur" }]
+      });
+    });
+  }
   
   // Créer le nouveau produit
   const newProduct = {
@@ -489,35 +521,7 @@ app.post('/api/products', (req, res) => {
     origin_country: "FR",
     material: "Textile premium",
     metadata: { brand: "Meknow", collection: "Nouveau" },
-    variants: [
-      { 
-        id: `variant_${productId}_s`, 
-        title: "S", 
-        sku: `${productId.toUpperCase()}-S`, 
-        inventory_quantity: 10,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      },
-      { 
-        id: `variant_${productId}_m`, 
-        title: "M", 
-        sku: `${productId.toUpperCase()}-M`, 
-        inventory_quantity: 15,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      },
-      { 
-        id: `variant_${productId}_l`, 
-        title: "L", 
-        sku: `${productId.toUpperCase()}-L`, 
-        inventory_quantity: 8,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      }
-    ]
+    variants: productVariants
   };
   
   // Ajouter le produit à la liste
