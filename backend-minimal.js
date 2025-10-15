@@ -427,61 +427,306 @@ app.post('/admin/auth/session', (req, res) => {
   }
 });
 
-// Interface Admin simple
+// ===== ROUTES API =====
+app.get('/api/products', (req, res) => {
+  console.log('📦 API - GET /api/products');
+  res.json({
+    products,
+    count: products.length,
+    offset: 0,
+    limit: 50
+  });
+});
+
+// Route pour créer un nouveau produit
+app.post('/api/products', (req, res) => {
+  console.log('📦 API - POST /api/products', req.body);
+  
+  const { title, description, imageUrl } = req.body;
+  
+  if (!title || !imageUrl) {
+    return res.status(400).json({
+      success: false,
+      error: 'Titre et image requis'
+    });
+  }
+  
+  // Générer un ID unique
+  const productId = `prod_${Date.now()}_${Math.round(Math.random() * 1000)}`;
+  
+  // Créer le nouveau produit
+  const newProduct = {
+    id: productId,
+    title: title,
+    handle: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
+    description: description || '',
+    thumbnail: imageUrl,
+    status: "published",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    weight: 500,
+    length: 25,
+    width: 20,
+    height: 3,
+    origin_country: "FR",
+    material: "Textile premium",
+    metadata: { brand: "Meknow", collection: "Nouveau" },
+    variants: [
+      { 
+        id: `variant_${productId}_s`, 
+        title: "S", 
+        sku: `${productId.toUpperCase()}-S`, 
+        inventory_quantity: 10,
+        manage_inventory: true,
+        allow_backorder: false,
+        prices: [{ amount: 9900, currency_code: "eur" }] 
+      },
+      { 
+        id: `variant_${productId}_m`, 
+        title: "M", 
+        sku: `${productId.toUpperCase()}-M`, 
+        inventory_quantity: 15,
+        manage_inventory: true,
+        allow_backorder: false,
+        prices: [{ amount: 9900, currency_code: "eur" }] 
+      },
+      { 
+        id: `variant_${productId}_l`, 
+        title: "L", 
+        sku: `${productId.toUpperCase()}-L`, 
+        inventory_quantity: 8,
+        manage_inventory: true,
+        allow_backorder: false,
+        prices: [{ amount: 9900, currency_code: "eur" }] 
+      }
+    ]
+  };
+  
+  // Ajouter le produit à la liste
+  products.push(newProduct);
+  
+  console.log(`✅ Produit créé: ${title} (ID: ${productId})`);
+  
+  res.json({
+    success: true,
+    product: newProduct,
+    message: `Produit "${title}" créé avec succès`
+  });
+});
+
+// Route pour modifier un produit existant
+app.put('/api/products/:id', (req, res) => {
+  console.log(`📦 API - PUT /api/products/${req.params.id}`, req.body);
+  
+  const productIndex = products.findIndex(p => p.id === req.params.id);
+  if (productIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      error: 'Produit non trouvé'
+    });
+  }
+  
+  // Mettre à jour le produit
+  products[productIndex] = {
+    ...products[productIndex],
+    ...req.body,
+    updated_at: new Date().toISOString()
+  };
+  
+  console.log(`✅ Produit modifié: ${products[productIndex].title}`);
+  
+  res.json({
+    success: true,
+    product: products[productIndex],
+    message: 'Produit modifié avec succès'
+  });
+});
+
+// Route pour supprimer un produit
+app.delete('/api/products/:id', (req, res) => {
+  console.log(`📦 API - DELETE /api/products/${req.params.id}`);
+  
+  const productIndex = products.findIndex(p => p.id === req.params.id);
+  if (productIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      error: 'Produit non trouvé'
+    });
+  }
+  
+  const deletedProduct = products.splice(productIndex, 1)[0];
+  console.log(`🗑️ Produit supprimé: ${deletedProduct.title}`);
+  
+  res.json({
+    success: true,
+    message: `Produit "${deletedProduct.title}" supprimé avec succès`
+  });
+});
+
+// Route pour la gestion des stocks
+app.put('/api/inventory/:variantId', (req, res) => {
+  console.log(`📋 API - PUT /api/inventory/${req.params.variantId}`, req.body);
+  
+  const { quantity, note } = req.body;
+  let variant = null;
+  let product = null;
+  
+  // Trouver la variante dans tous les produits
+  for (let p of products) {
+    const v = p.variants.find(variant => variant.id === req.params.variantId);
+    if (v) {
+      variant = v;
+      product = p;
+      break;
+    }
+  }
+  
+  if (!variant) {
+    return res.status(404).json({
+      success: false,
+      error: 'Variante non trouvée'
+    });
+  }
+  
+  const oldQuantity = variant.inventory_quantity;
+  variant.inventory_quantity = quantity;
+  
+  console.log(`📦 Stock mis à jour: ${product.title} (${variant.title}) ${oldQuantity} → ${quantity}`);
+  
+  res.json({
+    success: true,
+    variant,
+    oldQuantity,
+    newQuantity: quantity,
+    note: note || '',
+    message: `Stock mis à jour de ${oldQuantity} à ${quantity}`
+  });
+});
+
+// Route pour obtenir l'inventaire complet
+app.get('/api/inventory', (req, res) => {
+  console.log('📋 API - GET /api/inventory');
+  
+  const inventory = [];
+  products.forEach(product => {
+    product.variants.forEach(variant => {
+      inventory.push({
+        product_id: product.id,
+        product_title: product.title,
+        variant_id: variant.id,
+        variant_title: variant.title,
+        sku: variant.sku,
+        inventory_quantity: variant.inventory_quantity,
+        manage_inventory: variant.manage_inventory,
+        allow_backorder: variant.allow_backorder,
+        status: variant.inventory_quantity <= 5 ? 'low' : variant.inventory_quantity <= 15 ? 'medium' : 'good',
+        price: variant.prices[0].amount / 100
+      });
+    });
+  });
+  
+  res.json({
+    inventory,
+    count: inventory.length,
+    low_stock_count: inventory.filter(item => item.status === 'low').length
+  });
+});
+
+// Route pour les statistiques du tableau de bord
+app.get('/api/dashboard', (req, res) => {
+  console.log('📊 API - GET /api/dashboard');
+  
+  const totalProducts = products.length;
+  const totalVariants = products.reduce((sum, p) => sum + p.variants.length, 0);
+  const lowStockItems = products.reduce((sum, p) => {
+    return sum + p.variants.filter(v => v.inventory_quantity <= 5).length;
+  }, 0);
+  
+  const totalStock = products.reduce((sum, p) => {
+    return sum + p.variants.reduce((vSum, v) => vSum + v.inventory_quantity, 0);
+  }, 0);
+  
+  const totalValue = products.reduce((sum, p) => {
+    return sum + p.variants.reduce((vSum, v) => vSum + (v.prices[0].amount * v.inventory_quantity), 0);
+  }, 0);
+  
+  res.json({
+    totalProducts,
+    totalVariants,
+    totalStock,
+    lowStockItems,
+    totalValue: totalValue / 100, // Convert to euros
+    averageStockPerProduct: Math.round(totalStock / totalProducts),
+    categories: products.reduce((acc, p) => {
+      const cat = p.metadata?.category || 'Non catégorisé';
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+    }, {})
+  });
+});
+
+// Interface Admin complète
 app.get('/app', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Admin Meknow</title>
-        <style>
-            body { font-family: Arial; background: #0B0B0C; color: white; padding: 20px; }
-            .container { max-width: 1200px; margin: 0 auto; }
-            h1 { color: #F2C14E; }
-            .card { background: #1A1A1B; padding: 20px; margin: 10px 0; border-radius: 8px; border: 1px solid #F2C14E; }
-            .product { display: grid; grid-template-columns: 100px 1fr auto; gap: 15px; align-items: center; }
-            img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
-            .price { color: #F2C14E; font-weight: bold; }
-            .status { background: #1A4A1A; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🔧 Admin Meknow - Interface Simplifiée</h1>
-            
-            <div class="card">
-                <h2>📊 Tableau de Bord</h2>
-                <p>✅ <strong>4 produits</strong> actifs</p>
-                <p>✅ <strong>Collection Capsule Meknow</strong> configurée</p>
-                <p>✅ <strong>Paiement COD</strong> activé</p>
-                <p>✅ <strong>Images</strong> corrigées</p>
-            </div>
+  res.sendFile(path.join(__dirname, 'admin-complete-ecommerce.html'));
+});
 
-            <div class="card">
-                <h2>📦 Produits</h2>
-                ${products.map(p => `
-                    <div class="product">
-                        <img src="http://localhost:5000${p.thumbnail}" alt="${p.title}">
-                        <div>
-                            <h3>${p.title}</h3>
-                            <p>${p.description}</p>
-                            <span class="status">Publié</span>
-                        </div>
-                        <div class="price">${(p.variants[0].prices[0].amount / 100).toFixed(2)}€</div>
-                    </div>
-                `).join('')}
-            </div>
+// ===== UPLOAD D'IMAGES =====
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-            <div class="card">
-                <h2>🔗 Liens Utiles</h2>
-                <p><a href="http://localhost:5000" style="color: #F2C14E;">🛍️ Voir le site frontend</a></p>
-                <p><a href="http://localhost:9000/store/products" style="color: #F2C14E;">📦 API Produits</a></p>
-                <p><a href="http://localhost:8080" style="color: #F2C14E;">🔧 Interface de test</a></p>
-            </div>
-        </div>
-    </body>
-    </html>
-  `);
+// Configuration stockage images
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = './public/images';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    cb(null, 'product-' + uniqueSuffix + extension);
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non autorisé'), false);
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
+
+// Servir les images statiques
+app.use('/images', express.static('./public/images'));
+
+// Route d'upload d'images
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  console.log('📷 API - POST /api/upload');
+  
+  if (!req.file) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Aucune image fournie' 
+    });
+  }
+
+  const imageUrl = `/images/${req.file.filename}`;
+  
+  res.json({ 
+    success: true, 
+    url: imageUrl,
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    size: req.file.size
+  });
 });
 
 // Health check
@@ -495,4 +740,5 @@ app.listen(PORT, () => {
   console.log(`📱 Frontend: http://localhost:5000`);
   console.log(`⚙️ Admin: http://localhost:${PORT}/app`);
   console.log(`📦 API: http://localhost:${PORT}/store/products`);
+  console.log(`📷 Upload: /api/upload | Images: /images/*`);
 });
