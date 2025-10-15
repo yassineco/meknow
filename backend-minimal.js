@@ -685,6 +685,10 @@ app.get('/api/dashboard', (req, res) => {
 
 // Interface Admin complète
 app.get('/app', (req, res) => {
+  // Headers pour éviter le cache
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'admin-complete-ecommerce.html'));
 });
 
