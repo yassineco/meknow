@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/lib/medusa";
+import { formatPrice } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
 
 interface ProductCardProps {

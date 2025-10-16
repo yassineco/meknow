@@ -1,4 +1,4 @@
-import { getCollection, getProducts } from "@/lib/medusa";
+import { getCollection, getProducts } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
 import { notFound } from "next/navigation";
 

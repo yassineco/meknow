@@ -1,30 +1,50 @@
 // API Client pour backend Express.js
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 // Types simples pour les produits
 export interface Product {
-  id: number;
+  id: string;
   title: string;
   description: string;
   price: number;
   image_url?: string;
+  thumbnail?: string;
+  images?: Array<{ url: string }>;
+  subtitle?: string;
   stock: number;
   status: string;
+  category?: string;
+  options?: Array<{
+    values: string[];
+  }>;
   variants?: Array<{
+    id: string;
+    title: string;
     size: string;
     stock: number;
+    price: number;
+    option1: string;
   }>;
 }
 
 export interface Collection {
-  id: number;
+  id: string;
   name: string;
+  title: string;
   description?: string;
+  metadata?: {
+    description?: string;
+  };
   products?: Product[];
 }
 
 // Fonctions d'API
-export async function getProducts(params?: { limit?: number; offset?: number }): Promise<Product[]> {
+export async function getProducts(params?: { 
+  limit?: number; 
+  offset?: number;
+  collection_id?: string[];
+  category?: string;
+}): Promise<Product[]> {
   try {
     const url = new URL(`${API_URL}/api/products`);
     if (params?.limit) url.searchParams.append('limit', params.limit.toString());
@@ -87,3 +107,18 @@ export function formatPrice(price: number): string {
     currency: 'EUR',
   }).format(price);
 }
+
+// Fonction pour obtenir l'URL des images
+export function getImageUrl(imageUrl?: string): string {
+  if (!imageUrl) {
+    return '/placeholder.png'; // Image par défaut
+  }
+  
+  // Si l'URL est relative, ajouter le base URL
+  if (imageUrl.startsWith('/')) {
+    return `${process.env.NEXT_PUBLIC_BASE_URL || ''}${imageUrl}`;
+  }
+  
+  return imageUrl;
+}
+

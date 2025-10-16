@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { getProduct } from "@/lib/medusa";
-import { formatPrice } from "@/lib/medusa";
+import { getProduct } from "@/lib/api";
+import { formatPrice } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
 import { notFound } from "next/navigation";
 

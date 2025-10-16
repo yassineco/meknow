@@ -1,4 +1,4 @@
-import { getProducts } from "@/lib/medusa";
+import { getProducts } from "@/lib/api";
 import ProductCard from "./ProductCard";
 
 export default async function FeaturedCollection() {
