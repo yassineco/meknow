@@ -6,8 +6,19 @@ const PORT = 9000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5000', 'http://localhost:3000'],
-  credentials: true
+  origin: [
+    'http://localhost:5000', 
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'https://meknow.fr',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 }));
 app.use(express.json());
 
@@ -413,11 +424,11 @@ app.post('/admin/auth/session', (req, res) => {
   const { email, password } = req.body;
   console.log('🔐 Admin Login attempt:', email);
   
-  if (email === 'admin@medusa.com' && password === 'admin123') {
+  if (email === 'admin@meknow.fr' && password === 'admin123') {
     res.json({
       user: {
         id: 'admin_01',
-        email: 'admin@medusa.com',
+        email: 'admin@meknow.fr',
         first_name: 'Admin',
         last_name: 'Meknow'
       }

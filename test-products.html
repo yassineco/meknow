@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Produits</title>
+</head>
+<body>
+    <h1>Test API Produits</h1>
+    <button onclick="testAPI()">Tester API</button>
+    <div id="results"></div>
+
+    <script>
+        function testAPI() {
+            console.log('Test de l\'API...');
+            fetch(`${window.location.origin}/api/products`)
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                return response.text();
+            })
+            .then(text => {
+                console.log('Response text:', text);
+                document.getElementById('results').innerHTML = `<pre>${text}</pre>`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = `<p style="color: red;">Erreur: ${error.message}</p>`;
+            });
+        }
+
+        // Test automatique au chargement
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Liste Produits</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .error { color: red; }
+        .success { color: green; }
+        #debug { background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Test Liste Produits</h1>
+    <button onclick="loadProducts()">Charger Produits</button>
+    <div id="debug"></div>
+    <table id="productsTable">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Nom</th>
+                <th>Prix</th>
+                <th>Stock</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody id="productsTableBody">
+            <!-- Products will be loaded here -->
+        </tbody>
+    </table>
+
+    <script>
+        function debugLog(message, data = null) {
+            const debug = document.getElementById('debug');
+            const timestamp = new Date().toLocaleTimeString();
+            let logMessage = `[${timestamp}] ${message}`;
+            if (data) {
+                logMessage += ': ' + JSON.stringify(data, null, 2);
+            }
+            debug.innerHTML += logMessage + '<br>';
+            console.log(logMessage, data);
+        }
+
+        function loadProducts() {
+            debugLog('Starting to load products');
+            
+            fetch('https://meknow.fr/api/products')
+            .then(response => {
+                debugLog(`API response status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                debugLog(`Received data`, data);
+                const tbody = document.getElementById('productsTableBody');
+                
+                if (!tbody) {
+                    debugLog('ERROR: productsTableBody element not found');
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                if (!data || !data.products) {
+                    debugLog('ERROR: No products data received');
+                    return;
+                }
+                
+                debugLog(`Processing ${data.products.length} products`);
+                
+                data.products.forEach((product, index) => {
+                    debugLog(`Processing product ${index + 1}: ${product.title}`);
+                    
+                    // Handle different variant structures
+                    let price = '0.00';
+                    let totalStock = 0;
+                    
+                    if (product.price) {
+                        price = product.price.toFixed(2);
+                    } else if (Array.isArray(product.variants) && product.variants.length > 0) {
+                        try {
+                            price = (product.variants[0].prices[0].amount / 100).toFixed(2);
+                            totalStock = product.variants.reduce((sum, v) => sum + v.inventory_quantity, 0);
+                        } catch (e) {
+                            debugLog(`Error processing variant prices for ${product.title}`, e);
+                        }
+                    } else if (typeof product.variants === 'object') {
+                        totalStock = Object.values(product.variants).reduce((sum, stock) => sum + stock, 0);
+                        price = product.price ? product.price.toFixed(2) : '0.00';
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><img src="${product.thumbnail}" alt="${product.title}" style="width: 50px; height: 50px; object-fit: cover;"></td>
+                        <td>${product.title}</td>
+                        <td>${price}€</td>
+                        <td>${totalStock}</td>
+                        <td>${product.status === 'published' ? '✅ Publié' : '⏸️ Brouillon'}</td>
+                    `;
+                    tbody.appendChild(row);
+                    debugLog(`Added row for ${product.title}`);
+                });
+                
+                debugLog(`Successfully loaded ${data.products.length} products`);
+            })
+            .catch(error => {
+                debugLog(`Error loading products: ${error.message}`);
+                console.error('Full error:', error);
+            });
+        }
+
+        // Test automatique au chargement
+        window.onload = function() {
+            debugLog('Page loaded, starting automatic test');
+            loadProducts();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Meknow - Interface Directe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        body.loaded {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .products-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            position: relative;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            z-index: 10;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e0e0e0;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        table.visible {
+            opacity: 1;
+        }
+
+        th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-published {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-draft {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            display: none;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        /* Smooth fade transitions */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header fade-in">
+            <h1>🎯 Admin Meknow - Interface Directe</h1>
+            <p style="text-align: center; color: rgba(255,255,255,0.9); margin-top: 10px;">
+                Interface d'administration - Même domaine (pas de CORS)
+            </p>
+        </div>
+
+        <div class="products-section fade-in">
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <div class="loading-text">Chargement des produits...</div>
+            </div>
+
+            <div class="section-header">
+                <h2>📦 Gestion des Produits</h2>
+                <div>
+                    <button id="refreshBtn" class="btn" onclick="loadProducts()">🔄 Actualiser</button>
+                    <button class="btn" onclick="window.open('/api/products', '_blank')">📋 API JSON</button>
+                </div>
+            </div>
+
+            <div id="products-container">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Nom</th>
+                            <th>Prix</th>
+                            <th>Stock Total</th>
+                            <th>Statut</th>
+                            <th>Créé le</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <!-- Products will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="empty-state" class="empty-state">
+                <h3>📭 Aucun produit trouvé</h3>
+                <p>La liste des produits semble vide. Vérifiez votre connexion à l'API.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoading = false;
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            const table = document.getElementById('productsTable');
+            const emptyState = document.getElementById('empty-state');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            overlay.classList.remove('hidden');
+            table.classList.remove('visible');
+            emptyState.style.display = 'none';
+            refreshBtn.disabled = true;
+            isLoading = true;
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                refreshBtn.disabled = false;
+                isLoading = false;
+            }, 300); // Small delay for smooth transition
+        }
+
+        function loadProducts() {
+            if (isLoading) return;
+            
+            console.log('🔄 Chargement des produits...');
+            showLoading();
+            
+            const table = document.getElementById('productsTable');
+            const emptyState = document.getElementById('empty-state');
+            const tbody = document.getElementById('productsTableBody');
+
+            // Same domain API call - no CORS issues
+            fetch('/api/products')
+            .then(response => {
+                console.log('📡 Réponse API:', response.status, response.statusText);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 Données reçues:', data);
+
+                if (!data || !data.products || data.products.length === 0) {
+                    hideLoading();
+                    emptyState.style.display = 'block';
+                    showNotification('Aucun produit trouvé', 'error');
+                    return;
+                }
+
+                // Clear existing rows
+                tbody.innerHTML = '';
+
+                data.products.forEach((product, index) => {
+                    console.log(`📋 Traitement produit ${index + 1}:`, product.title);
+
+                    // Calculate price and stock
+                    let price = '0,00';
+                    let totalStock = 0;
+
+                    if (product.price) {
+                        price = product.price.toFixed(2).replace('.', ',');
+                    } else if (Array.isArray(product.variants) && product.variants.length > 0) {
+                        try {
+                            price = (product.variants[0].prices[0].amount / 100).toFixed(2).replace('.', ',');
+                            totalStock = product.variants.reduce((sum, v) => sum + (v.inventory_quantity || 0), 0);
+                        } catch (e) {
+                            console.warn('⚠️ Erreur traitement variants:', e);
+                        }
+                    } else if (typeof product.variants === 'object') {
+                        totalStock = Object.values(product.variants).reduce((sum, stock) => sum + (stock || 0), 0);
+                        price = (product.price || 0).toFixed(2).replace('.', ',');
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <img src="${product.thumbnail || '/placeholder.jpg'}" 
+                                 alt="${product.title}" 
+                                 class="product-image"
+                                 onerror="this.src='/placeholder.jpg'">
+                        </td>
+                        <td><strong>${product.title}</strong></td>
+                        <td><strong>${price} €</strong></td>
+                        <td><span style="padding: 4px 8px; background: ${totalStock > 10 ? '#28a745' : totalStock > 0 ? '#ffc107' : '#dc3545'}; color: white; border-radius: 4px; font-size: 12px;">${totalStock}</span></td>
+                        <td><span class="status-${product.status}">${product.status === 'published' ? '✅ Publié' : '⏸️ Brouillon'}</span></td>
+                        <td>${formatDate(product.created_at)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                hideLoading();
+                
+                // Show table with smooth transition
+                setTimeout(() => {
+                    table.classList.add('visible');
+                    showNotification(`✅ ${data.products.length} produits chargés avec succès`, 'success');
+                }, 400);
+                
+                console.log(`✅ ${data.products.length} produits affichés`);
+            })
+            .catch(error => {
+                console.error('❌ Erreur chargement:', error);
+                hideLoading();
+                emptyState.style.display = 'block';
+                showNotification(`❌ Erreur: ${error.message}`, 'error');
+            });
+        }
+
+        // Improved page initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Page chargée, initialisation...');
+            
+            // Show body with smooth transition
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 100);
+            
+            // Load products after a small delay to ensure smooth UI
+            setTimeout(() => {
+                loadProducts();
+            }, 200);
+        });
+
+        // Prevent flash of unstyled content
+        window.addEventListener('load', function() {
+            document.body.style.visibility = 'visible';
+        });
+    </script>
+</body>
+</html>

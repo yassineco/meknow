@@ -1,6 +1,6 @@
-# 🚀 Quick Start - Menow
+# 🚀 Quick Start - Meknow
 
-Guide de démarrage rapide pour lancer Menow en 5 minutes.
+Guide de démarrage rapide pour lancer Meknow en 5 minutes.
 
 ---
 
@@ -9,44 +9,36 @@ Guide de démarrage rapide pour lancer Menow en 5 minutes.
 ### 1️⃣ Installer les dépendances
 
 ```bash
-pnpm install
+# Dépendances racine
+npm install
+
+# Frontend Next.js
+cd menow-web
+npm install
+cd ..
 ```
 
 ### 2️⃣ Configurer les environnements
 
 ```bash
-# Backend
-cp medusa-api/.env.example medusa-api/.env
-
 # Frontend
 cp menow-web/.env.local.example menow-web/.env.local
 ```
 
-**Modifier `medusa-api/.env`** avec votre URL PostgreSQL :
+**Modifier `menow-web/.env.local`** :
 ```env
-DATABASE_URL=postgresql://user:password@localhost:5432/menow_dev
+NEXT_PUBLIC_API_URL=http://localhost:9000
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+SITE_NAME=Meknow
 ```
 
-### 3️⃣ Initialiser la base de données
+### 3️⃣ Vérifier la base de données
 
-```bash
-# Migrations
-pnpm --filter medusa-api migrate
+Assurez-vous que PostgreSQL est démarré et que votre backend `backend-minimal.js` peut s'y connecter.
 
-# Créer admin
-pnpm user:create
-```
+### 4️⃣ Base de données avec produits
 
-Credentials admin :
-- Email: `admin@menow.fr`
-- Password: `supersecret`
-
-### 4️⃣ Seed des données
-
-```bash
-# Seed personnalisé (région France + 4 produits + collection Capsule)
-pnpm seed
-```
+La base contient déjà 5 produits de test prêts à utiliser.
 
 ### 5️⃣ Démarrer
 
@@ -55,13 +47,28 @@ pnpm seed
 pnpm dev
 ```
 
+### 5️⃣ Démarrer le projet
+
+```bash
+# Option 1: Tout en parallèle
+npm run dev
+
+# Option 2: Séparément (2 terminaux)
+# Terminal 1
+node backend-minimal.js
+
+# Terminal 2  
+cd menow-web
+npm run dev
+```
+
 ---
 
 ## 🌐 URLs
 
 - **API Backend** : http://localhost:9000
 - **Frontend** : http://localhost:3000
-- **Admin Panel** : http://localhost:7001
+- **Admin Panel** : http://localhost:8080/admin-direct.html (serveur statique)
 
 ---
 
@@ -71,18 +78,18 @@ Testez ces endpoints :
 
 ```bash
 # Liste des produits
-curl http://localhost:9000/store/products
+curl http://localhost:9000/api/products
 
-# Collection Capsule
-curl http://localhost:9000/store/collections
+# Statistiques dashboard
+curl http://localhost:9000/api/dashboard/stats
 
-# Regions (France avec COD)
-curl http://localhost:9000/store/regions
+# Rapport de stock
+curl http://localhost:9000/api/inventory
 ```
 
 Visitez http://localhost:3000 → Vous devriez voir :
 - ✅ Hero avec animations dorées
-- ✅ 4 produits de la collection Capsule
+- ✅ 5 produits en grille
 - ✅ Lookbook grid
 - ✅ Badge "Paiement comptant disponible"
 
@@ -94,23 +101,40 @@ Visitez http://localhost:3000 → Vous devriez voir :
 
 Vérifiez que :
 1. PostgreSQL est démarré
-2. `DATABASE_URL` dans `.env` est correct
-3. La base de données `menow_dev` existe
+2. Configuration DB dans `backend-minimal.js` est correcte
+3. La base de données existe
 
 ```bash
 # Créer la DB si nécessaire
-createdb menow_dev
+createdb meknow_prod
 ```
 
-### Erreur : "Admin authentication failed"
+### Erreur : Port déjà utilisé
 
-1. Créez d'abord l'admin : `pnpm user:create`
-2. Vérifiez que l'API est démarrée avant de lancer le seed
+```bash
+# Changer le port dans backend-minimal.js
+const PORT = process.env.PORT || 9001;
+```
 
 ### Le frontend ne charge pas les produits
 
+1. Vérifiez que l'API répond : `curl http://localhost:9000/api/products`
+2. Vérifiez le `NEXT_PUBLIC_API_URL` dans `menow-web/.env.local`
+3. Redémarrez le frontend après changement d'env
+
+---
+
+## 🎯 C'est parti !
+
+Votre plateforme Meknow est maintenant prête ! 
+
+**Admin Interface** : http://localhost:8080/admin-direct.html  
+**Site Public** : http://localhost:3000
+
+Bon développement ! 🚀
+
 1. Vérifiez que l'API tourne sur le port 9000
-2. Vérifiez `NEXT_PUBLIC_MEDUSA_URL` dans `menow-web/.env.local`
+2. Vérifiez le `NEXT_PUBLIC_API_URL` dans `menow-web/.env.local`
 
 ---
 

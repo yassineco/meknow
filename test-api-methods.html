@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Meknow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #ffe6e6; color: #d00; }
+        .success { background: #e6ffe6; color: #080; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test API Meknow</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Fetch direct avec CORS</h3>
+        <button onclick="testDirectFetch()">Tester Fetch Direct</button>
+        <div id="result1" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Via serveur proxy local</h3>
+        <button onclick="testProxyFetch()">Tester Proxy</button>
+        <div id="result2" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: XMLHttpRequest</h3>
+        <button onclick="testXHR()">Tester XHR</button>
+        <div id="result3" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Iframe Solution</h3>
+        <button onclick="testIframe()">Créer Iframe</button>
+        <div id="result4" class="result"></div>
+        <iframe id="apiFrame" style="display:none;"></iframe>
+    </div>
+
+    <script>
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${isError ? 'error' : 'success'}`;
+            element.innerHTML = message;
+            console.log(message);
+        }
+
+        // Test 1: Direct fetch
+        function testDirectFetch() {
+            log('result1', '🔄 Test en cours...');
+            
+            fetch('https://meknow.fr/api/products', {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log('result1', `✅ Succès! ${data.products?.length || 0} produits trouvés`);
+            })
+            .catch(error => {
+                log('result1', `❌ Erreur: ${error.message}`, true);
+            });
+        }
+
+        // Test 2: Proxy
+        function testProxyFetch() {
+            log('result2', '🔄 Test proxy...');
+            
+            fetch('/api/products')
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log('result2', `✅ Proxy fonctionne! ${data.products?.length || 0} produits`);
+            })
+            .catch(error => {
+                log('result2', `❌ Proxy error: ${error.message}`, true);
+            });
+        }
+
+        // Test 3: XHR
+        function testXHR() {
+            log('result3', '🔄 Test XHR...');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://meknow.fr/api/products', true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            log('result3', `✅ XHR succès! ${data.products?.length || 0} produits`);
+                        } catch (e) {
+                            log('result3', `❌ Parse error: ${e.message}`, true);
+                        }
+                    } else {
+                        log('result3', `❌ XHR error: ${xhr.status} ${xhr.statusText}`, true);
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                log('result3', '❌ XHR network error', true);
+            };
+            
+            xhr.send();
+        }
+
+        // Test 4: Iframe
+        function testIframe() {
+            log('result4', '🔄 Création iframe...');
+            
+            const iframe = document.getElementById('apiFrame');
+            iframe.src = 'https://meknow.fr/api/products';
+            
+            iframe.onload = function() {
+                try {
+                    // This will fail due to CORS, but we can detect if it loads
+                    log('result4', '✅ Iframe chargé (contenu non accessible)');
+                } catch (e) {
+                    log('result4', `❌ Iframe error: ${e.message}`, true);
+                }
+            };
+            
+            iframe.onerror = function() {
+                log('result4', '❌ Iframe failed to load', true);
+            };
+        }
+
+        // Auto-run all tests
+        window.onload = function() {
+            setTimeout(() => {
+                testDirectFetch();
+                setTimeout(() => testProxyFetch(), 1000);
+                setTimeout(() => testXHR(), 2000);
+            }, 500);
+        };
+    </script>
+</body>
+</html>

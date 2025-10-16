@@ -629,66 +629,6 @@
         let uploadedImageUrl = null;
         let currentEditingProduct = null;
         
-        // Vérification d'authentification au chargement
-        function checkAuth() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                showNotification('Session expirée. Redirection vers la page de connexion...', 'warning');
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 2000);
-                return false;
-            }
-            return true;
-        }
-
-        // Helper pour obtenir les en-têtes avec authentification
-        function getAuthHeaders() {
-            const token = localStorage.getItem('adminToken');
-            return {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            };
-        }
-
-        // Helper pour les requêtes fetch avec authentification
-        function authenticatedFetch(url, options = {}) {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                showNotification('Token d\'authentification manquant', 'error');
-                setTimeout(() => window.location.href = '/login', 1500);
-                return Promise.reject(new Error('No auth token'));
-            }
-
-            const defaultHeaders = {
-                'Authorization': `Bearer ${token}`
-            };
-
-            // Si c'est un FormData, ne pas ajouter Content-Type
-            if (!(options.body instanceof FormData)) {
-                defaultHeaders['Content-Type'] = 'application/json';
-            }
-
-            const authOptions = {
-                ...options,
-                headers: {
-                    ...defaultHeaders,
-                    ...(options.headers || {})
-                }
-            };
-
-            return fetch(url, authOptions)
-                .then(response => {
-                    if (response.status === 401) {
-                        showNotification('Session expirée. Redirection...', 'warning');
-                        localStorage.removeItem('adminToken');
-                        setTimeout(() => window.location.href = '/login', 1500);
-                        throw new Error('Authentication failed');
-                    }
-                    return response;
-                });
-        }
-        
         function debugLog(message) {
             console.log('[DEBUG]', message);
             if (debugEnabled) {
@@ -698,14 +638,6 @@
                 console.scrollTop = console.scrollHeight;
             }
         }
-
-        // Vérifier l'authentification au chargement de la page
-        window.addEventListener('load', function() {
-            if (!checkAuth()) {
-                return;
-            }
-            debugLog('Admin authentifié - Interface prête');
-        });
 
         function showNotification(message, type = 'info') {
             // Créer la notification
@@ -799,15 +731,11 @@
             }
         }
 
-        // Configuration API pour tests
-        const API_BASE = 'http://localhost:8080';
-        
         // Dashboard functions
         function loadDashboard() {
             debugLog('Loading dashboard data');
             
-            // Utiliser l'API publique temporairement
-            fetch(`${API_BASE}/api/products`)
+            fetch(`${window.location.origin}/api/products`)
             .then(response => response.json())
             .then(data => {
                 document.getElementById('totalProducts').textContent = data.products.length;
@@ -815,11 +743,9 @@
                 // Count low stock items
                 let lowStock = 0;
                 data.products.forEach(product => {
-                    if (product.variants && Array.isArray(product.variants)) {
-                        product.variants.forEach(variant => {
-                            if (variant.inventory_quantity <= 5) lowStock++;
-                        });
-                    }
+                    product.variants.forEach(variant => {
+                        if (variant.inventory_quantity <= 5) lowStock++;
+                    });
                 });
                 document.getElementById('lowStockCount').textContent = lowStock;
                 
@@ -827,7 +753,6 @@
             })
             .catch(error => {
                 debugLog(`Error loading dashboard: ${error.message}`);
-                showNotification('Erreur lors du chargement du tableau de bord', 'error');
             });
         }
 
@@ -835,8 +760,7 @@
         function loadProducts() {
             debugLog('Loading products for management');
             
-            // Utiliser l'API publique temporairement
-            fetch(`${API_BASE}/api/products`)
+            fetch(`${window.location.origin}/api/products`)
             .then(response => {
                 debugLog(`Products API response status: ${response.status}`);
                 if (!response.ok) {
@@ -919,8 +843,7 @@
         function loadInventory() {
             debugLog('Loading inventory data');
             
-            // Utiliser l'API publique temporairement
-            fetch(`${API_BASE}/api/products`)
+            fetch(`${window.location.origin}/api/products`)
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById('inventoryTableBody');
@@ -972,7 +895,7 @@
             debugLog(`Opening edit modal for product: ${productId}`);
             
             // Récupérer les données du produit
-            fetch(`${API_BASE}/api/admin/products/${productId}`)
+            fetch(`${window.location.origin}/api/products/${productId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -981,8 +904,8 @@
                         
                         // Remplir le formulaire avec les données existantes
                         document.getElementById('productTitle').value = product.title;
-                        document.getElementById('productDescription').value = product.description || '';
-                        document.getElementById('productPrice').value = product.price || 0;
+                        document.getElementById('productDescription').value = product.description;
+                        document.getElementById('productPrice').value = product.variants[0].prices[0].amount / 100;
                         
                         // Remplir les stocks par taille
                         if (product.variants.length >= 1) document.getElementById('stockS').value = product.variants[0].inventory_quantity;
@@ -1010,11 +933,8 @@
         function deleteProduct(productId) {
             debugLog(`Delete request for product: ${productId}`);
             if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-                fetch(`${API_BASE}/api/products/${productId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                fetch(`${window.location.origin}/api/products/${productId}`, {
+                    method: 'DELETE'
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -1114,7 +1034,7 @@
 
             debugLog('Sending upload request to /api/upload');
 
-            authenticatedFetch(`${API_BASE}/api/upload`, {
+            fetch(`${window.location.origin}/api/upload`, {
                 method: 'POST',
                 body: formData
             })
@@ -1173,7 +1093,7 @@
 
             debugLog(`Sending product data: ${JSON.stringify(productData)}`);
 
-            const url = isEditing ? `${API_BASE}/api/products/${currentEditingProduct}` : `${API_BASE}/api/products`;
+            const url = isEditing ? `${window.location.origin}/api/products/${currentEditingProduct}` : `${window.location.origin}/api/products`;
             const method = isEditing ? 'PUT' : 'POST';
             const action = isEditing ? 'modifié' : 'créé';
 
@@ -1226,10 +1146,8 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             debugLog('Admin interface loaded, initializing...');
-            if (checkAuth()) {
-                loadDashboard();
-                loadProducts();
-            }
+            loadDashboard();
+            loadProducts();
         });
 
         // Close modals when clicking outside
