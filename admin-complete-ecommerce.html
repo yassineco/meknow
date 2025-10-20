@@ -800,7 +800,7 @@
         }
 
         // Configuration API pour tests
-        const API_BASE = 'http://localhost:8080';
+        const API_BASE = 'http://localhost:9000';
         
         // Dashboard functions
         function loadDashboard() {
@@ -972,7 +972,7 @@
             debugLog(`Opening edit modal for product: ${productId}`);
             
             // Récupérer les données du produit
-            fetch(`${API_BASE}/api/admin/products/${productId}`)
+            fetch(`${API_BASE}/api/products/${productId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

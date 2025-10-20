@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = 9000;
@@ -559,12 +560,49 @@ app.put('/api/products/:id', (req, res) => {
     });
   }
   
-  // Mettre à jour le produit
-  products[productIndex] = {
-    ...products[productIndex],
-    ...req.body,
-    updated_at: new Date().toISOString()
-  };
+  const originalProduct = products[productIndex];
+  
+  // Gérer spécialement les variants si ils viennent du frontend admin
+  if (req.body.variants && typeof req.body.variants === 'object' && !Array.isArray(req.body.variants)) {
+    // Format admin: {S: 10, M: 15, L: 8} → mise à jour des quantités des variants existants
+    const variantStocks = req.body.variants;
+    const updatedVariants = originalProduct.variants.map(variant => {
+      if (variantStocks[variant.title] !== undefined) {
+        return {
+          ...variant,
+          inventory_quantity: variantStocks[variant.title]
+        };
+      }
+      return variant;
+    });
+    
+    // Mettre à jour le produit en préservant la structure des variants
+    products[productIndex] = {
+      ...originalProduct,
+      title: req.body.title || originalProduct.title,
+      description: req.body.description || originalProduct.description,
+      category: req.body.category || originalProduct.category,
+      status: req.body.status || originalProduct.status,
+      variants: updatedVariants,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Mettre à jour le prix si fourni (en centimes)
+    if (req.body.price) {
+      const priceInCents = Math.round(req.body.price * 100);
+      products[productIndex].variants.forEach(variant => {
+        variant.prices[0].amount = priceInCents;
+      });
+    }
+  } else {
+    // Mise à jour normale (préserve les variants originaux)
+    products[productIndex] = {
+      ...originalProduct,
+      ...req.body,
+      variants: originalProduct.variants, // Préserver les variants originaux
+      updated_at: new Date().toISOString()
+    };
+  }
   
   console.log(`✅ Produit modifié: ${products[productIndex].title}`);
   
@@ -699,7 +737,7 @@ app.get('/api/dashboard', (req, res) => {
 });
 
 // Interface Admin complète
-app.get('/app', (req, res) => {
+app.get('/admin', (req, res) => {
   // Headers pour éviter le cache
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -707,9 +745,16 @@ app.get('/app', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-complete-ecommerce.html'));
 });
 
+// Page de login admin
+app.get('/login', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
 // ===== UPLOAD D'IMAGES =====
 const multer = require('multer');
-const path = require('path');
 const fs = require('fs');
 
 // Configuration stockage images
@@ -740,6 +785,12 @@ const upload = multer({
   },
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
 });
+
+// Servir les fichiers statiques HTML (APRÈS les routes spécifiques)
+app.use(express.static('./', {
+  extensions: ['html'],
+  index: false
+}));
 
 // Servir les images statiques
 app.use('/images', express.static('./public/images'));
@@ -774,8 +825,9 @@ app.get('/health', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend Meknow minimal démarré sur port ${PORT}`);
-  console.log(`📱 Frontend: http://localhost:5000`);
-  console.log(`⚙️ Admin: http://localhost:${PORT}/app`);
-  console.log(`📦 API: http://localhost:${PORT}/store/products`);
+  console.log(`📱 Frontend: http://localhost:3000`);
+  console.log(`⚙️ Admin: http://localhost:${PORT}/admin`);
+  console.log(`🔐 Login: http://localhost:${PORT}/login`);
+  console.log(`📦 API: http://localhost:${PORT}/api/products`);
   console.log(`📷 Upload: /api/upload | Images: /images/*`);
 });

@@ -54,7 +54,19 @@ export async function getProducts(params?: {
     if (!response.ok) throw new Error('Failed to fetch products');
     
     const data = await response.json();
-    return data;
+    
+    // L'API backend-minimal.js retourne { products: [...], count: number }
+    if (Array.isArray(data.products)) {
+      return data.products;
+    }
+    
+    // Fallback pour autres formats
+    if (data.success && Array.isArray(data.products)) {
+      return data.products;
+    }
+    
+    console.warn('API returned unexpected format:', data);
+    return [];
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -67,7 +79,13 @@ export async function getProduct(handle: string): Promise<Product | null> {
     if (!response.ok) return null;
     
     const data = await response.json();
-    return data;
+    
+    // L'API retourne { success: true, product: {...} }
+    if (data.success && data.product) {
+      return data.product;
+    }
+    
+    return null;
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
