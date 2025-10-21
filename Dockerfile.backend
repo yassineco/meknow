@@ -3,7 +3,8 @@ FROM node:18-alpine
 
 # Informations du mainteneur
 LABEL maintainer="yassineco"
-LABEL description="Meknow Backend API - E-commerce platform"
+LABEL description="Meknow Backend API - E-commerce platform avec gestion rubriques"
+LABEL version="2.0.0"
 
 # Définir le répertoire de travail
 WORKDIR /app

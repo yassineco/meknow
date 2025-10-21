@@ -5,14 +5,22 @@ export default async function Lookbook() {
   // 🎯 Récupérer les produits du lookbook via l'API
   let lookbookData;
   try {
-    const response = await fetch(`${process.env.API_URL}/api/products/lookbook`, {
-      cache: 'no-store' // Pas de cache pour avoir les données temps réel
+    // Utiliser une URL différente selon l'environnement
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+    const response = await fetch(`${apiUrl}/api/products/lookbook`, {
+      cache: 'no-store', // Pas de cache pour avoir les données temps réel
+      next: { revalidate: 0 }
     });
-    lookbookData = await response.json();
+    
+    if (response.ok) {
+      lookbookData = await response.json();
+    } else {
+      throw new Error(`HTTP ${response.status}`);
+    }
   } catch (error) {
     console.error('Erreur récupération lookbook:', error);
-    // Fallback vers les images statiques si API indisponible
-    lookbookData = { grouped: {} };
+    // Fallback vers structure vide si API indisponible (build time)
+    lookbookData = { grouped: {}, products: [] };
   }
 
   // Transformation des catégories lookbook en format d'affichage

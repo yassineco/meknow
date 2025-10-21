@@ -15,7 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/pgdata
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - meknow-network
     healthcheck:
@@ -42,8 +42,12 @@ services:
       DB_NAME: meknow_production
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
       COOKIE_SECRET: ${COOKIE_SECRET:-your-super-secret-cookie-key-change-this}
+      # Nouvelles fonctionnalités
+      ENABLE_RUBRIQUES: "true"
+      ENABLE_LOOKBOOK: "true"
+      ENABLE_ADMIN_INTERFACE: "true"
     ports:
-      - "9000:9000"
+      - "9001:9000"
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
@@ -58,7 +62,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Frontend Next.js
+  # Frontend Next.js avec gestion rubriques
   frontend:
     build:
       context: ./menow-web
@@ -69,10 +73,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 5000
+      PORT: 3000
       NEXT_PUBLIC_API_URL: http://backend:9000
+      API_URL: http://backend:9000
+      ENABLE_RUBRIQUES: "true"
+      ENABLE_LOOKBOOK: "true"
     ports:
-      - "5000:5000"
+      - "3001:3000"
     depends_on:
       - backend
     networks:
@@ -89,7 +96,9 @@ services:
     container_name: meknow-admin
     restart: unless-stopped
     volumes:
-      - ./admin-complete.html:/usr/share/nginx/html/index.html:ro
+      - ./admin-complete-ecommerce.html:/usr/share/nginx/html/admin-complete-ecommerce.html:ro
+      - ./admin-complete-ecommerce.html:/usr/share/nginx/html/index.html:ro
+      - ./assets:/usr/share/nginx/html/assets:ro
       - ./nginx-admin.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - "8082:80"

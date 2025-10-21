@@ -3,13 +3,45 @@
 const getApiUrl = () => {
   // Si on est côté serveur (SSR)
   if (typeof window === 'undefined') {
-    return process.env.API_URL || "http://127.0.0.1:9000";
+    // Pendant le build, utiliser une URL par défaut
+    if (process.env.NODE_ENV === 'production' && !process.env.API_URL) {
+      return "http://backend:9000";
+    }
+    return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:9000";
   }
   // Si on est côté client (navigateur)  
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
 };
 
 const API_URL = getApiUrl();
+
+// Configuration globale pour les requêtes
+const fetchConfig: RequestInit = {
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  // Pas de cache pour les données dynamiques
+  cache: 'no-store',
+};
+
+// Fonction utilitaire pour gérer les erreurs de build
+const isBuildTime = () => {
+  return process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.RUNTIME;
+};
+
+// Wrapper pour les requêtes avec gestion d'erreur de build
+async function safeFetch(url: string, options?: RequestInit): Promise<Response | null> {
+  try {
+    const response = await fetch(url, { ...fetchConfig, ...options });
+    return response;
+  } catch (error) {
+    if (isBuildTime()) {
+      console.warn(`API call failed during build time: ${url}`);
+      return null;
+    }
+    throw error;
+  }
+}
 
 // Types simples pour les produits
 export interface Product {
@@ -95,8 +127,14 @@ export async function getProducts(params?: {
       params.collection_id.forEach(id => url.searchParams.append('collection_id', id));
     }
     
-    const response = await fetch(url.toString());
-    if (!response.ok) throw new Error('Failed to fetch products');
+    const response = await safeFetch(url.toString(), {
+      next: { revalidate: 0 }
+    });
+    
+    // Si pas de réponse (build time), retourner un tableau vide
+    if (!response) return [];
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch products`);
     
     const data = await response.json();
     
@@ -121,8 +159,8 @@ export async function getProducts(params?: {
 
 export async function getProduct(handle: string): Promise<Product | null> {
   try {
-    const response = await fetch(`${API_URL}/api/products/${handle}`);
-    if (!response.ok) return null;
+    const response = await safeFetch(`${API_URL}/api/products/${handle}`);
+    if (!response || !response.ok) return null;
     
     const data = await response.json();
     
@@ -140,7 +178,8 @@ export async function getProduct(handle: string): Promise<Product | null> {
 
 export async function getCollections(): Promise<Collection[]> {
   try {
-    const response = await fetch(`${API_URL}/api/collections`);
+    const response = await safeFetch(`${API_URL}/api/collections`);
+    if (!response) return [];
     if (!response.ok) throw new Error('Failed to fetch collections');
     
     const data = await response.json();
@@ -153,8 +192,8 @@ export async function getCollections(): Promise<Collection[]> {
 
 export async function getCollection(handle: string): Promise<Collection | null> {
   try {
-    const response = await fetch(`${API_URL}/api/collections/${handle}`);
-    if (!response.ok) return null;
+    const response = await safeFetch(`${API_URL}/api/collections/${handle}`);
+    if (!response || !response.ok) return null;
     
     const data = await response.json();
     
