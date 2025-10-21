@@ -1,0 +1,20 @@
+# Dockerfile.simple - Version ultra-simplifiée sans Tailwind
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copier package.json minimal
+COPY package.json ./
+
+# Installation des dépendances minimales
+RUN npm install --only=production
+
+# Copier le code source
+COPY . .
+
+# Build sans CSS complexe
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
