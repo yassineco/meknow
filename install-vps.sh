@@ -19,23 +19,58 @@ echo "======================================================="
 PROJECT_DIR="/var/www/meknow"
 DOMAIN="meknow.fr"
 
-echo "1. 🧹 Nettoyage de l'ancienne installation..."
+echo "1. 🧹 NETTOYAGE COMPLET de l'ancienne installation..."
 
-# Arrêter PM2 si actif
+# Fonction de log
+log() { echo "  [$(date '+%H:%M:%S')] $1"; }
+
+# ARRÊT PM2 COMPLET
+log "🛑 Arrêt de tous les processus PM2..."
 if command -v pm2 &> /dev/null; then
     pm2 stop all 2>/dev/null || true
-    pm2 delete all 2>/dev/null || true
+    pm2 delete all 2>/dev/null || true  
     pm2 kill 2>/dev/null || true
+    log "✅ PM2 arrêté complètement"
+else
+    log "ℹ️  PM2 non installé"
 fi
 
-# Libérer les ports
-sudo fuser -k 3000/tcp 2>/dev/null || true
-sudo fuser -k 9000/tcp 2>/dev/null || true
-sudo fuser -k 80/tcp 2>/dev/null || true
+# LIBÉRATION DES PORTS CRITIQUES
+log "🔓 Libération de TOUS les ports critiques..."
+for port in 80 443 3000 9000 5432 8080 8082; do
+    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+        log "🔧 Port $port occupé - libération forcée..."
+        sudo fuser -k $port/tcp 2>/dev/null || true
+        sleep 1
+    fi
+done
 
-# Nettoyer les processus Node
-pkill -f "node" 2>/dev/null || true
-pkill -f "next" 2>/dev/null || true
+# NETTOYAGE PROCESSUS NODE COMPLET
+log "🔄 Nettoyage complet des processus Node.js..."
+pkill -f "node.*backend-minimal" 2>/dev/null || true  
+pkill -f "next.*dev\|next.*start" 2>/dev/null || true
+pkill -f "npm.*start" 2>/dev/null || true
+pkill -9 -f "node" 2>/dev/null || true  # Force kill si nécessaire
+sleep 2
+
+# ARRÊT NGINX EXISTANT
+log "🌐 Arrêt Nginx existant..."
+if systemctl is-active --quiet nginx 2>/dev/null; then
+    sudo systemctl stop nginx || true
+    log "✅ Nginx arrêté"
+fi
+
+# NETTOYAGE DOCKER EXISTANT
+log "🐳 Nettoyage Docker complet..."
+if command -v docker &> /dev/null; then
+    docker stop $(docker ps -aq) 2>/dev/null || true
+    docker rm $(docker ps -aq) 2>/dev/null || true
+    docker system prune -af 2>/dev/null || true
+    log "✅ Docker nettoyé"
+fi
+
+log "🔍 Vérification ports libérés..."
+netstat -tulpn 2>/dev/null | grep -E ':80|:443|:3000|:9000|:5432' || log "✅ Tous les ports critiques libérés"
 
 echo "2. 🐳 Installation Docker si nécessaire..."
 
