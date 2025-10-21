@@ -1,0 +1,66 @@
+# Dockerfile simplifié pour le frontend Next.js
+FROM node:18-alpine AS base
+
+# Informations du mainteneur
+LABEL maintainer="yassineco"
+LABEL description="Meknow Frontend Next.js - Version simplifiée"
+LABEL version="2.1.0"
+
+# Installer les dépendances système
+RUN apk add --no-cache libc6-compat curl
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Variables d'environnement
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Étape 1: Installer les dépendances
+FROM base AS deps
+COPY package*.json ./
+RUN npm ci
+
+# Étape 2: Builder l'application  
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Variables de build
+ARG NEXT_PUBLIC_API_URL=http://localhost:9000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+# Build Next.js
+RUN npm run build
+
+# Étape 3: Image de production
+FROM base AS runner
+WORKDIR /app
+
+# Créer un utilisateur non-root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copier les fichiers nécessaires
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+# Changer les permissions
+RUN chown -R nextjs:nodejs /app
+
+# Passer à l'utilisateur nextjs
+USER nextjs
+
+# Exposer le port
+EXPOSE 3000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:3000 || exit 1
+
+# Commande de démarrage
+CMD ["npm", "start"]
