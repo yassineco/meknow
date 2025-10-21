@@ -2,7 +2,8 @@
 
 **Meknow** est une plateforme e-commerce premium française développée avec une architecture full-stack moderne, spécialisée dans la mode artisanale haut de gamme.
 
-> 🚀 **Statut : DÉPLOYÉ EN PRODUCTION** - Interface admin fonctionnelle sur https://meknow.fr/admin-direct.html
+> 🎉 **SYNCHRONISATION ADMIN ↔ FRONTEND RÉUSSIE** - Nouveaux produits apparaissent instantanément sur le site !  
+> 🚀 **Statut : PRODUCTION COMPLÈTE** - Architecture PM2 stable avec synchronisation temps réel
 
 ## 📋 Vue d'ensemble
 
@@ -82,21 +83,31 @@ menow/
    - Coton biologique certifié
    - Tailles: S(50), M(60), L(45), XL(30) - Stock: 185 unités
 
+## 🎉 **SYNCHRONISATION AUTOMATIQUE VALIDÉE**
+
+### **✅ Problème Résolu**
+- **Avant** : Nouveaux produits admin invisibles sur frontend
+- **Maintenant** : Ajout produit → Affichage immédiat automatique
+- **Solution** : Architecture unifiée avec revalidation temps réel
+
+### **🚀 Tests de Validation**
+1. ✅ **Ajout produit "chemise"** via admin (`localhost:9000/admin`)
+2. ✅ **Apparition instantanée** sur frontend (`localhost:3000`) 
+3. ✅ **5 produits synchronisés** parfaitement
+4. ✅ **Processus PM2** stable et persistant
+
 ## 🔧 Installation & Déploiement
 
-### **Déploiement Production (Actuel)**
+### **Développement Local (Architecture Actuelle)**
 
-Le projet est **déjà déployé** sur un VPS Ubuntu 24.04 avec l'architecture suivante :
+Le projet utilise une architecture **Express.js + Next.js** avec PM2 pour la stabilité :
 
 ```bash
-# Serveur : 31.97.196.215 (meknow.fr)
-# SSL : Let's Encrypt (certificats automatiques)
-# Proxy : Nginx avec configuration HTTPS
-# Services : Docker Compose
-
-# Services actifs :
-- Frontend Next.js    → Port 3000
-- Backend Express.js  → Port 9000  
+# Architecture locale validée :
+- Backend Express.js  → Port 9000 (PM2 managed)
+- Frontend Next.js    → Port 3000 (nohup persistant)
+- API unifiée        → /api/* (synchronisation automatique)
+- Interface Admin    → /admin (port 9000)  
 - PostgreSQL         → Port 5432
 - Interface Admin    → Fichiers statiques
 ```
@@ -167,10 +178,35 @@ npm run dev
 # → Frontend sur http://localhost:3000 (utilise API prod)
 ```
 
+## 🎯 **SYNCHRONISATION ADMIN ↔ FRONTEND**
+
+### **🚀 Workflow Automatique Validé**
+```bash
+1. Ajouter produit via Admin (localhost:9000/admin)
+   ↓
+2. API Express.js sauvegarde en base 
+   ↓  
+3. Revalidation automatique Next.js
+   ↓
+4. Produit apparaît instantanément sur frontend (localhost:3000)
+```
+
+### **✅ Fonctionnalités Synchronisées**
+- **Création produits** : Ajout admin → Affichage immédiat
+- **Modification produits** : Updates temps réel
+- **Gestion stock** : Synchronisation automatique
+- **Images produits** : Upload et affichage direct
+
+### **🔧 Architecture Technique**
+- **Backend Express** : API REST unifiée sur port 9000
+- **Frontend Next.js** : Récupération via `/api/products` (tous produits)
+- **Revalidation** : Endpoint `/api/revalidate` pour cache refresh
+- **PM2 Management** : Processus backend stable et persistant
+
 ## 🔧 Gestion PM2 (Process Manager)
 
 ### **Configuration PM2**
-Le projet utilise PM2 pour une gestion robuste des processus en développement et production :
+Le projet utilise PM2 pour une gestion robuste des processus avec **auto-restart** et **monitoring** :
 
 ```javascript
 // ecosystem.config.js
