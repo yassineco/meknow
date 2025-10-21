@@ -1,10 +1,10 @@
-# Dockerfile pour le frontend Next.js avec gestion rubriques
+# Dockerfile simplifié pour Next.js - Version stable
 FROM node:18-alpine
 
 # Informations du mainteneur
 LABEL maintainer="yassineco"
-LABEL description="Meknow Frontend Next.js avec gestion rubriques Catalogue/Lookbook"
-LABEL version="2.0.0"
+LABEL description="Meknow Frontend Next.js - Version simplifiée et stable"
+LABEL version="2.1.0"
 
 # Installer les dépendances système
 RUN apk add --no-cache libc6-compat curl
@@ -17,28 +17,32 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copier les fichiers de dépendances
+# Copier et installer les dépendances
 COPY package*.json ./
-
-# Installer TOUTES les dépendances (dev incluses pour le build)
 RUN npm ci
 
-# Copier le code source
+# Copier tout le code source
 COPY . .
 
 # Variables d'environnement pour le build
 ARG NEXT_PUBLIC_API_URL=http://localhost:9000
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
+# S'assurer que les dossiers nécessaires existent
+RUN mkdir -p public .next src/styles
+
+# Créer globals.css si manquant
+RUN if [ ! -f "src/styles/globals.css" ]; then \
+    echo "@tailwind base; @tailwind components; @tailwind utilities;" > src/styles/globals.css; \
+fi
+
 # Build de l'application Next.js
 RUN npm run build
 
 # Créer un utilisateur non-root
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-# Changer les permissions
-RUN chown -R nextjs:nodejs /app
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs && \
+    chown -R nextjs:nodejs /app
 
 # Passer à l'utilisateur nextjs
 USER nextjs
