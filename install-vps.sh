@@ -176,7 +176,17 @@ EOL
 
 # Activer le site
 sudo ln -sf /etc/nginx/sites-available/meknow.fr /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+
+# Supprimer le site par défaut de nginx
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Tester la configuration
+sudo nginx -t
+
+# Démarrer et activer Nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo systemctl reload nginx
 
 echo "6. 🚀 Déploiement Docker..."
 
