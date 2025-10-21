@@ -37,12 +37,14 @@ Ce projet remplace une solution Shopify par une stack moderne et simplifiée bas
 | **Base de Données** | PostgreSQL | Port 5432 |
 
 ### **Fonctionnalités Admin Déployées**
+- ✅ **Gestion rubriques** : Catalogue vs Lookbook (standards e-commerce)
+- ✅ **Cases à cocher** : Sélection multi-rubriques par produit
+- ✅ **Catégories lookbook** : Collection Premium, Savoir-faire, Style Contemporain
+- ✅ **Badges visuels** : Colonne rubriques avec indicateurs colorés
 - ✅ **Liste des produits** avec images, prix, stock en temps réel
-- ✅ **Gestion sans erreur CORS** (même domaine)
-- ✅ **Interface responsive** et moderne
-- ✅ **Chargement fluide** sans scintillement
-- ✅ **Notifications** de succès/erreur
-- ✅ **API JSON directe** accessible
+- ✅ **Interface responsive** et moderne sans erreurs CORS
+- ✅ **Synchronisation automatique** admin ↔ frontend
+- ✅ **API spécialisées** : `/catalog` et `/lookbook`
 
 
 
@@ -107,9 +109,9 @@ Le projet utilise une architecture **Express.js + Next.js** avec PM2 pour la sta
 - Backend Express.js  → Port 9000 (PM2 managed)
 - Frontend Next.js    → Port 3000 (nohup persistant)
 - API unifiée        → /api/* (synchronisation automatique)
-- Interface Admin    → /admin (port 9000)  
+- API rubriques      → /api/products/catalog + /api/products/lookbook
+- Interface Admin    → /admin avec gestion rubriques complète
 - PostgreSQL         → Port 5432
-- Interface Admin    → Fichiers statiques
 ```
 
 ### **Accès Production**
@@ -192,14 +194,18 @@ npm run dev
 ```
 
 ### **✅ Fonctionnalités Synchronisées**
-- **Création produits** : Ajout admin → Affichage immédiat
-- **Modification produits** : Updates temps réel
+- **Gestion rubriques** : Catalogue vs Lookbook selon standards e-commerce
+- **Création produits** : Ajout admin → Affichage immédiat dans bonnes sections
+- **Modification produits** : Updates temps réel avec rubriques
 - **Gestion stock** : Synchronisation automatique
 - **Images produits** : Upload et affichage direct
+- **Catégories lookbook** : Organisation professionnelle par thème
 
 ### **🔧 Architecture Technique**
 - **Backend Express** : API REST unifiée sur port 9000
-- **Frontend Next.js** : Récupération via `/api/products` (tous produits)
+- **API spécialisées** : `/api/products/catalog` et `/api/products/lookbook`
+- **Frontend Next.js** : Composants dynamiques par section
+- **Gestion rubriques** : Multi-sélection avec cases à cocher admin
 - **Revalidation** : Endpoint `/api/revalidate` pour cache refresh
 - **PM2 Management** : Processus backend stable et persistant
 
