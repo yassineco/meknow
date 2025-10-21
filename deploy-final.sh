@@ -32,7 +32,7 @@ docker system prune -af --volumes
 
 # Clone du projet
 echo "📥 Clone du projet..."
-git clone https://github.com/yac4423/menow.git
+git clone https://github.com/yassineco/menow.git
 cd menow
 
 # CORRECTION COMPLÈTE DES IMPORTS NEXT.JS
