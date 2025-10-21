@@ -436,6 +436,7 @@
                         <th>Prix</th>
                         <th>Stock</th>
                         <th>Statut</th>
+                        <th>🎯 Rubriques</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -573,6 +574,48 @@
 
                         <img id="imagePreview" alt="Aperçu">
                         <div id="imageInfo"></div>
+                    </div>
+                </div>
+
+                <!-- 🎯 GESTION DES RUBRIQUES -->
+                <h3 style="margin: 30px 0 20px 0; color: #e74c3c;">🎯 Affichage des Rubriques</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; font-weight: bold;">
+                            <input type="checkbox" id="displayCatalog" checked style="margin-right: 10px; transform: scale(1.2);">
+                            📦 Afficher dans "Nos Produits" (Catalogue)
+                        </label>
+                        <small style="color: #bdc3c7; margin-left: 28px;">Section transactionnelle avec prix et bouton achat</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; font-weight: bold;">
+                            <input type="checkbox" id="displayLookbook" style="margin-right: 10px; transform: scale(1.2);">
+                            👗 Afficher dans "Lookbook" (Inspiration)
+                        </label>
+                        <small style="color: #bdc3c7; margin-left: 28px;">Section inspiration avec ambiance et style</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lookbookCategory">Catégorie Lookbook</label>
+                        <select id="lookbookCategory">
+                            <option value="">-- Aucune catégorie --</option>
+                            <option value="collection-premium">Collection Premium</option>
+                            <option value="savoir-faire-artisanal">Savoir-faire Artisanal</option>
+                            <option value="style-contemporain">Style Contemporain</option>
+                            <option value="collection-automne">Collection Automne</option>
+                        </select>
+                        <small style="color: #bdc3c7;">Organisé par thème dans le lookbook</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; font-weight: bold;">
+                            <input type="checkbox" id="isFeatured" style="margin-right: 10px; transform: scale(1.2);">
+                            ⭐ Produit Vedette
+                        </label>
+                        <small style="color: #bdc3c7; margin-left: 28px;">Mise en avant sur la page d'accueil</small>
                     </div>
                 </div>
 
@@ -898,6 +941,23 @@
                     if (totalStock <= 5) stockClass = 'stock-low';
                     else if (totalStock <= 15) stockClass = 'stock-medium';
                     
+                    // 🎯 Génération des badges de rubriques
+                    let rubriquesBadges = '';
+                    if (product.display_sections) {
+                        if (product.display_sections.includes('catalog')) {
+                            rubriquesBadges += '<span style="background: #27ae60; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8em; margin-right: 5px;">📦 Catalogue</span>';
+                        }
+                        if (product.display_sections.includes('lookbook')) {
+                            rubriquesBadges += '<span style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8em; margin-right: 5px;">👗 Lookbook</span>';
+                        }
+                    } else {
+                        rubriquesBadges = '<span style="background: #95a5a6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8em;">❓ Non défini</span>';
+                    }
+                    
+                    if (product.is_featured) {
+                        rubriquesBadges += '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8em; margin-left: 5px;">⭐ Vedette</span>';
+                    }
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td><img src="${product.thumbnail}" alt="${product.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;"></td>
@@ -905,6 +965,7 @@
                         <td>${price}€</td>
                         <td><span class="stock-indicator ${stockClass}">${totalStock}</span></td>
                         <td>${product.status === 'published' ? '✅ Publié' : '⏸️ Brouillon'}</td>
+                        <td>${rubriquesBadges}</td>
                         <td class="actions">
                             <button class="btn btn-info" onclick="editProduct('${product.id}')">✏️</button>
                             <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">🗑️</button>
@@ -1161,12 +1222,26 @@
                 return;
             }
 
+            // 🎯 Récupération des données de rubriques
+            const displaySections = [];
+            if (document.getElementById('displayCatalog').checked) {
+                displaySections.push('catalog');
+            }
+            if (document.getElementById('displayLookbook').checked) {
+                displaySections.push('lookbook');
+            }
+
             const productData = {
                 title: document.getElementById('productTitle').value,
                 description: document.getElementById('productDescription').value,
                 price: parseFloat(document.getElementById('productPrice').value),
                 category: document.getElementById('productCategory').value,
                 status: document.getElementById('productStatus').value,
+                collection_id: document.getElementById('productCollection').value,
+                // 🎯 NOUVEAUX CHAMPS RUBRIQUES
+                display_sections: displaySections,
+                lookbook_category: document.getElementById('lookbookCategory').value || null,
+                is_featured: document.getElementById('isFeatured').checked,
                 variants: {
                     S: parseInt(document.getElementById('stockS').value),
                     M: parseInt(document.getElementById('stockM').value),

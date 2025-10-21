@@ -52,6 +52,10 @@ let products = [
     thumbnail: "/images/luxury_fashion_jacke_28fde759.jpg",
     status: "published",
     collection_id: "coll_capsule",
+    // 🎯 GESTION DES RUBRIQUES
+    display_sections: ["catalog", "lookbook"], // Où afficher le produit
+    lookbook_category: "collection-premium",    // Catégorie dans lookbook
+    is_featured: true,                         // Produit vedette
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 1200,
@@ -108,6 +112,10 @@ let products = [
     thumbnail: "/images/luxury_fashion_jacke_45c6de81.jpg",
     status: "published",
     collection_id: "coll_capsule",
+    // 🎯 GESTION DES RUBRIQUES
+    display_sections: ["catalog"],             // Catalogue uniquement
+    lookbook_category: null,                   // Pas dans lookbook
+    is_featured: false,                        // Pas vedette
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 800,
@@ -164,6 +172,10 @@ let products = [
     thumbnail: "/images/premium_fashion_coll_0e2672aa.jpg",
     status: "published",
     collection_id: "coll_capsule",
+    // 🎯 GESTION DES RUBRIQUES
+    display_sections: ["lookbook"],            // Lookbook uniquement  
+    lookbook_category: "style-contemporain",   // Catégorie lookbook
+    is_featured: true,                         // Produit vedette
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 300,
@@ -220,6 +232,10 @@ let products = [
     thumbnail: "/images/premium_fashion_coll_55d86770.jpg",
     status: "published",
     collection_id: "coll_capsule",
+    // 🎯 GESTION DES RUBRIQUES
+    display_sections: ["catalog", "lookbook"], // Les deux rubriques
+    lookbook_category: "savoir-faire-artisanal", // Catégorie lookbook
+    is_featured: false,                        // Pas vedette
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 200,
@@ -505,21 +521,57 @@ app.get('/api/products', (req, res) => {
   });
 });
 
-// Route pour obtenir un produit spécifique
-app.get('/api/products/:id', (req, res) => {
-  console.log(`📦 API - GET /api/products/${req.params.id}`);
+// 🎯 NOUVELLES ROUTES POUR GESTION DES RUBRIQUES (AVANT /:id pour éviter confusion)
+
+// Route pour obtenir les produits du catalogue (section "Nos Produits")
+app.get('/api/products/catalog', (req, res) => {
+  console.log('🛍️ API - GET /api/products/catalog');
   
-  const product = products.find(p => p.id === req.params.id);
-  if (!product) {
-    return res.status(404).json({
-      success: false,
-      error: 'Produit non trouvé'
-    });
-  }
+  const catalogProducts = products.filter(product => 
+    product.display_sections && product.display_sections.includes('catalog')
+  );
   
   res.json({
-    success: true,
-    product
+    products: catalogProducts,
+    count: catalogProducts.length,
+    section: 'catalog'
+  });
+});
+
+// Route pour obtenir les produits du lookbook (section "Lookbook")
+app.get('/api/products/lookbook', (req, res) => {
+  console.log('👗 API - GET /api/products/lookbook');
+  
+  const lookbookProducts = products.filter(product => 
+    product.display_sections && product.display_sections.includes('lookbook')
+  );
+  
+  // Grouper par catégorie lookbook
+  const groupedProducts = lookbookProducts.reduce((acc, product) => {
+    const category = product.lookbook_category || 'uncategorized';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(product);
+    return acc;
+  }, {});
+  
+  res.json({
+    products: lookbookProducts,
+    grouped: groupedProducts,
+    count: lookbookProducts.length,
+    section: 'lookbook'
+  });
+});
+
+// Route pour obtenir les produits vedettes
+app.get('/api/products/featured', (req, res) => {
+  console.log('⭐ API - GET /api/products/featured');
+  
+  const featuredProducts = products.filter(product => product.is_featured === true);
+  
+  res.json({
+    products: featuredProducts,
+    count: featuredProducts.length,
+    section: 'featured'
   });
 });
 
@@ -527,7 +579,18 @@ app.get('/api/products/:id', (req, res) => {
 app.post('/api/products', async (req, res) => {
   console.log('📦 API - POST /api/products', req.body);
   
-  const { title, description, imageUrl, price, variants, collection_id } = req.body;
+  const { 
+    title, 
+    description, 
+    imageUrl, 
+    price, 
+    variants, 
+    collection_id,
+    // 🎯 NOUVEAUX CHAMPS RUBRIQUES
+    display_sections,
+    lookbook_category,
+    is_featured
+  } = req.body;
   
   if (!title || !imageUrl) {
     return res.status(400).json({
@@ -580,6 +643,10 @@ app.post('/api/products', async (req, res) => {
     thumbnail: imageUrl,
     status: "published",
     collection_id: collection_id || null,
+    // 🎯 GESTION DES RUBRIQUES
+    display_sections: display_sections || ["catalog"], // Par défaut: catalogue
+    lookbook_category: lookbook_category || null,
+    is_featured: is_featured === true || is_featured === "true",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     weight: 500,
@@ -795,6 +862,24 @@ app.get('/api/dashboard', (req, res) => {
       acc[cat] = (acc[cat] || 0) + 1;
       return acc;
     }, {})
+  });
+});
+
+// Route pour obtenir un produit spécifique (DOIT être après les routes spécifiques)
+app.get('/api/products/:id', (req, res) => {
+  console.log(`📦 API - GET /api/products/${req.params.id}`);
+  
+  const product = products.find(p => p.id === req.params.id);
+  if (!product) {
+    return res.status(404).json({
+      success: false,
+      error: 'Produit non trouvé'
+    });
+  }
+  
+  res.json({
+    success: true,
+    product
   });
 });
 
