@@ -23,6 +23,25 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// 🚀 FONCTION DE REVALIDATION AUTOMATIQUE
+async function triggerFrontendRevalidation() {
+  try {
+    const fetch = (await import('node-fetch')).default;
+    const response = await fetch('http://localhost:3000/api/revalidate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.ok) {
+      console.log('✅ Frontend revalidation triggered successfully');
+    } else {
+      console.log('⚠️ Frontend revalidation failed:', response.status);
+    }
+  } catch (error) {
+    console.log('ℹ️ Frontend not reachable for revalidation:', error.message);
+  }
+}
+
 // Données de test avec gestion de stock
 let products = [
   {
@@ -30,8 +49,9 @@ let products = [
     title: "Blouson Cuir Premium",
     handle: "blouson-cuir-premium",
     description: "Blouson en cuir véritable, confection artisanale française",
-    thumbnail: "/products/luxury_fashion_jacke_28fde759.jpg",
+    thumbnail: "/images/luxury_fashion_jacke_28fde759.jpg",
     status: "published",
+    collection_id: "coll_capsule",
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 1200,
@@ -85,8 +105,9 @@ let products = [
     title: "Jean Denim Selvage",
     handle: "jean-denim-selvage",
     description: "Jean en denim selvage authentique, coupe moderne",
-    thumbnail: "/products/luxury_fashion_jacke_45c6de81.jpg",
+    thumbnail: "/images/luxury_fashion_jacke_45c6de81.jpg",
     status: "published",
+    collection_id: "coll_capsule",
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 800,
@@ -140,8 +161,9 @@ let products = [
     title: "Chemise Lin Naturel",
     handle: "chemise-lin-naturel",
     description: "Chemise en lin naturel, légère et respirante",
-    thumbnail: "/products/premium_fashion_coll_0e2672aa.jpg",
+    thumbnail: "/images/premium_fashion_coll_0e2672aa.jpg",
     status: "published",
+    collection_id: "coll_capsule",
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 300,
@@ -195,8 +217,9 @@ let products = [
     title: "T-Shirt Coton Bio",
     handle: "tshirt-coton-bio",
     description: "T-shirt en coton biologique, confortable et durable",
-    thumbnail: "/products/premium_fashion_coll_55d86770.jpg",
+    thumbnail: "/images/premium_fashion_coll_55d86770.jpg",
     status: "published",
+    collection_id: "coll_capsule",
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
     weight: 200,
@@ -295,21 +318,25 @@ app.get('/admin/products/:id', (req, res) => {
   }
 });
 
-app.post('/admin/products', (req, res) => {
+app.post('/admin/products', async (req, res) => {
   const newProduct = {
     id: `prod_${Date.now()}`,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    status: 'draft',
+    status: 'published', // 🚀 AUTO-PUBLIÉ pour affichage immédiat
     variants: [],
     ...req.body
   };
   products.push(newProduct);
   console.log('✅ Produit créé:', newProduct.title);
+  
+  // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
+  await triggerFrontendRevalidation();
+  
   res.json({ product: newProduct });
 });
 
-app.post('/admin/products/:id', (req, res) => {
+app.post('/admin/products/:id', async (req, res) => {
   const productIndex = products.findIndex(p => p.id === req.params.id);
   if (productIndex !== -1) {
     products[productIndex] = {
@@ -318,6 +345,10 @@ app.post('/admin/products/:id', (req, res) => {
       updated_at: new Date().toISOString()
     };
     console.log('✅ Produit mis à jour:', products[productIndex].title);
+    
+    // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
+    await triggerFrontendRevalidation();
+    
     res.json({ product: products[productIndex] });
   } else {
     res.status(404).json({ message: 'Product not found' });
@@ -441,12 +472,36 @@ app.post('/admin/auth/session', (req, res) => {
 
 // ===== ROUTES API =====
 app.get('/api/products', (req, res) => {
-  console.log('📦 API - GET /api/products');
+  console.log('📦 API - GET /api/products', req.query);
+  
+  let filteredProducts = products;
+  
+  // Filtrage par collection_id
+  if (req.query.collection_id) {
+    const collectionFilter = Array.isArray(req.query.collection_id) 
+      ? req.query.collection_id 
+      : [req.query.collection_id];
+    
+    filteredProducts = products.filter(product => {
+      if (!product.collection_id) return false;
+      return collectionFilter.some(col => 
+        product.collection_id === `coll_${col}` || 
+        product.collection_id === col
+      );
+    });
+  }
+  
+  // Pagination
+  const limit = parseInt(req.query.limit) || 50;
+  const offset = parseInt(req.query.offset) || 0;
+  const paginatedProducts = filteredProducts.slice(offset, offset + limit);
+  
   res.json({
-    products,
-    count: products.length,
-    offset: 0,
-    limit: 50
+    products: paginatedProducts,
+    count: paginatedProducts.length,
+    total: filteredProducts.length,
+    offset: offset,
+    limit: limit
   });
 });
 
@@ -469,10 +524,10 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // Route pour créer un nouveau produit
-app.post('/api/products', (req, res) => {
+app.post('/api/products', async (req, res) => {
   console.log('📦 API - POST /api/products', req.body);
   
-  const { title, description, imageUrl, price, variants } = req.body;
+  const { title, description, imageUrl, price, variants, collection_id } = req.body;
   
   if (!title || !imageUrl) {
     return res.status(400).json({
@@ -524,6 +579,7 @@ app.post('/api/products', (req, res) => {
     description: description || '',
     thumbnail: imageUrl,
     status: "published",
+    collection_id: collection_id || null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     weight: 500,
@@ -541,6 +597,9 @@ app.post('/api/products', (req, res) => {
   
   console.log(`✅ Produit créé: ${title} (ID: ${productId})`);
   
+  // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
+  await triggerFrontendRevalidation();
+  
   res.json({
     success: true,
     product: newProduct,
@@ -549,7 +608,7 @@ app.post('/api/products', (req, res) => {
 });
 
 // Route pour modifier un produit existant
-app.put('/api/products/:id', (req, res) => {
+app.put('/api/products/:id', async (req, res) => {
   console.log(`📦 API - PUT /api/products/${req.params.id}`, req.body);
   
   const productIndex = products.findIndex(p => p.id === req.params.id);
@@ -605,6 +664,9 @@ app.put('/api/products/:id', (req, res) => {
   }
   
   console.log(`✅ Produit modifié: ${products[productIndex].title}`);
+  
+  // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
+  await triggerFrontendRevalidation();
   
   res.json({
     success: true,
@@ -733,6 +795,35 @@ app.get('/api/dashboard', (req, res) => {
       acc[cat] = (acc[cat] || 0) + 1;
       return acc;
     }, {})
+  });
+});
+
+// Routes API Collections pour Next.js
+app.get('/api/collections', (req, res) => {
+  console.log('📂 API - GET /api/collections');
+  res.json({ collections });
+});
+
+app.get('/api/collections/:handle', (req, res) => {
+  console.log(`📂 API - GET /api/collections/${req.params.handle}`);
+  
+  const collection = collections.find(c => c.handle === req.params.handle || c.id === req.params.handle);
+  if (!collection) {
+    return res.status(404).json({
+      success: false,
+      error: 'Collection non trouvée'
+    });
+  }
+  
+  // Ajouter les produits de la collection (pour l'instant tous les produits)
+  const collectionWithProducts = {
+    ...collection,
+    products: products.filter(p => p.status === 'published')
+  };
+  
+  res.json({
+    success: true,
+    collection: collectionWithProducts
   });
 });
 

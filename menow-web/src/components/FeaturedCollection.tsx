@@ -3,17 +3,18 @@ import ProductCard from "./ProductCard";
 
 export default async function FeaturedCollection() {
   try {
-    const products = await getProducts({ limit: 4, collection_id: ["capsule"] });
+    // 🚀 SUPPRESSION DU FILTRE - Affiche TOUS les produits ajoutés
+    const products = await getProducts({ limit: 8 });
 
     return (
       <section className="section bg-bg-primary">
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-4">
-              Collection Capsule
+              Nos Produits
             </h2>
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              Nos pièces signature, fabriquées à la main au Maroc
+              Tous nos produits disponibles - Mise à jour automatique
             </p>
           </div>
 

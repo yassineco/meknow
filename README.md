@@ -128,7 +128,23 @@ npm install
 
 #### **Lancement Développement**
 
-**Option 1: Backend local + Frontend local**
+**Option 1: Mode Développement Robuste (Recommandé)**
+```bash
+# 🚀 Backend avec PM2 (process manager)
+pm2 start ecosystem.config.js
+# → Backend sur http://localhost:9000 (stable, auto-restart)
+
+# 🎨 Frontend Next.js en arrière-plan
+cd menow-web && nohup npm run dev > /dev/null 2>&1 &
+# → Frontend sur http://localhost:3000 (persistant)
+
+# 📊 Vérification des services
+pm2 list                                    # État PM2
+curl -I http://localhost:9000/api/products  # Test backend
+curl -I http://localhost:3000               # Test frontend
+```
+
+**Option 2: Mode Développement Simple**
 ```bash
 # Terminal 1: Backend Express.js
 node backend-minimal.js
@@ -138,13 +154,9 @@ node backend-minimal.js
 cd menow-web
 npm run dev
 # → Frontend sur http://localhost:3000
-
-# Terminal 3: Interface Admin
-python3 -m http.server 8080
-# → Admin sur http://localhost:8080/admin-direct.html
 ```
 
-**Option 2: Frontend local + API Production**
+**Option 3: Frontend local + API Production**
 ```bash
 # Modifier menow-web/.env.local
 NEXT_PUBLIC_API_URL=https://meknow.fr
@@ -154,6 +166,53 @@ cd menow-web
 npm run dev
 # → Frontend sur http://localhost:3000 (utilise API prod)
 ```
+
+## 🔧 Gestion PM2 (Process Manager)
+
+### **Configuration PM2**
+Le projet utilise PM2 pour une gestion robuste des processus en développement et production :
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: 'meknow-backend',
+    script: 'backend-minimal.js',
+    instances: 1,
+    autorestart: true,
+    max_memory_restart: '1G',
+    env: {
+      NODE_ENV: 'development',
+      PORT: 9000
+    }
+  }]
+}
+```
+
+### **Commandes PM2 Utiles**
+```bash
+# Démarrage et gestion
+pm2 start ecosystem.config.js      # Démarrer le backend
+pm2 restart meknow-backend         # Redémarrer
+pm2 stop meknow-backend            # Arrêter
+pm2 delete meknow-backend          # Supprimer
+
+# Monitoring
+pm2 list                           # État des processus
+pm2 logs meknow-backend           # Logs en temps réel
+pm2 monit                         # Interface de monitoring
+
+# Persistence
+pm2 save                          # Sauvegarder la config
+pm2 startup                       # Démarrage automatique au boot
+```
+
+### **Avantages PM2**
+- ✅ **Auto-restart** : Redémarrage automatique en cas de crash
+- ✅ **Persistence** : Les processus survivent à la fermeture des terminaux
+- ✅ **Monitoring** : Supervision CPU/RAM en temps réel
+- ✅ **Logs centralisés** : Tous les logs dans un endroit
+- ✅ **Zero-downtime** : Redémarrage sans interruption de service
 
 ## ⚙️ Interface Administration
 

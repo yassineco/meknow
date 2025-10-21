@@ -4,10 +4,10 @@
   "private": true,
   "description": "Meknow - E-commerce Express.js API + Next.js Frontend",
   "scripts": {
-    "dev": "concurrently -k -n api,web -c yellow,cyan \"node backend-v2.js\" \"npm --prefix menow-web run dev\"",
+    "dev": "concurrently -k -n api,web -c yellow,cyan \"node backend-minimal.js\" \"npm --prefix menow-web run dev\"",
     "build": "npm --prefix menow-web run build",
-    "start": "concurrently -k -n api,web -c yellow,cyan \"node backend-v2.js\" \"npm --prefix menow-web run start\"",
-    "api": "node backend-v2.js",
+    "start": "concurrently -k -n api,web -c yellow,cyan \"node backend-minimal.js\" \"npm --prefix menow-web run start\"",
+    "api": "node backend-minimal.js",
     "web": "npm --prefix menow-web run dev",
     "build:web": "npm --prefix menow-web run build",
     "start:web": "npm --prefix menow-web run start",
