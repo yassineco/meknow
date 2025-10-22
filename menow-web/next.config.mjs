@@ -11,6 +11,14 @@ const nextConfig = {
         hostname: 'picsum.photos',
       },
       {
+        protocol: 'https',
+        hostname: 'meknow.fr',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.meknow.fr',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
         port: '9000',
