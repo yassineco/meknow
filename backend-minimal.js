@@ -13,9 +13,13 @@ app.use(cors({
     'http://localhost:8080',
     'http://localhost:3001',
     'http://localhost:3002',
+    'http://meknow.fr',
     'https://meknow.fr',
+    'http://www.meknow.fr',
+    'https://www.meknow.fr',
     'http://127.0.0.1:8080',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'http://31.97.196.215'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -474,7 +478,15 @@ app.post('/admin/auth/session', (req, res) => {
   
   if (email === 'admin@meknow.fr' && password === 'admin123') {
     res.json({
+      success: true,
+      token: 'admin_token_' + Date.now(),
       user: {
+        id: 'admin_01',
+        email: 'admin@meknow.fr',
+        first_name: 'Admin',
+        last_name: 'Meknow'
+      },
+      admin: {
         id: 'admin_01',
         email: 'admin@meknow.fr',
         first_name: 'Admin',
@@ -482,7 +494,7 @@ app.post('/admin/auth/session', (req, res) => {
       }
     });
   } else {
-    res.status(401).json({ message: 'Invalid credentials' });
+    res.status(401).json({ success: false, error: 'Email ou mot de passe incorrect' });
   }
 });
 

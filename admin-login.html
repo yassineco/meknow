@@ -177,7 +177,8 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:9000';
+        // Utiliser l'hôte courant au lieu de localhost
+        const API_BASE = window.location.origin;
         
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
