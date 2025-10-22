@@ -710,6 +710,8 @@ app.put('/api/products/:id', async (req, res) => {
       category: req.body.category || originalProduct.category,
       status: req.body.status || originalProduct.status,
       variants: updatedVariants,
+      // Mise à jour explicite de display_sections
+      display_sections: req.body.display_sections || originalProduct.display_sections,
       updated_at: new Date().toISOString()
     };
     
@@ -726,6 +728,8 @@ app.put('/api/products/:id', async (req, res) => {
       ...originalProduct,
       ...req.body,
       variants: originalProduct.variants, // Préserver les variants originaux
+      // Mise à jour explicite de display_sections
+      display_sections: req.body.display_sections || originalProduct.display_sections,
       updated_at: new Date().toISOString()
     };
   }

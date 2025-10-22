@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getImageUrl } from "@/lib/utils";
 
 // Fonction pour récupérer les produits lookbook depuis l'API
 async function getLookbookProducts() {
@@ -25,27 +26,8 @@ async function getLookbookProducts() {
 export default async function Lookbook() {
   const lookbookProducts = await getLookbookProducts();
 
-  // Transformation des catégories lookbook en format d'affichage
-  const lookbookSections = [
-    {
-      key: "collection-premium",
-      title: "Collection Premium", 
-      subtitle: "Cuirs d'exception",
-      fallbackImage: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80"
-    },
-    {
-      key: "savoir-faire-artisanal", 
-      title: "Savoir-faire artisanal",
-      subtitle: "Made in Morocco",
-      fallbackImage: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80"
-    },
-    {
-      key: "style-contemporain",
-      title: "Style contemporain", 
-      subtitle: "Design intemporel",
-      fallbackImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"
-    }
-  ];
+  // Fallback image si le produit n'a pas d'image
+  const fallbackImage = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80";
 
   return (
     <section className="section bg-bg-secondary">
@@ -60,43 +42,39 @@ export default async function Lookbook() {
         </div>
 
         <div className="grid grid--3">
-          {lookbookSections.map((section, i) => {
-            // Chercher un produit pour cette catégorie lookbook
-            const sectionProduct = lookbookProducts.find(
-              product => product.lookbook_category === section.key
-            );
-            
-            const imageUrl = sectionProduct?.thumbnail || section.fallbackImage;
-            const title = sectionProduct?.title || section.title;
-            const subtitle = sectionProduct?.metadata?.collection || section.subtitle;
-
-            return (
-              <div key={section.key} className="card group cursor-pointer">
-                <div className="card__image-wrapper aspect-square">
-                  <Image
-                    src={imageUrl}
-                    alt={title}
-                    fill
-                    className="card__image object-cover"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                  <div className="card__overlay">
-                    <div className="text-center">
-                      <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
-                        {title}
-                      </h3>
-                      <p className="text-accent">{subtitle}</p>
-                      {sectionProduct && (
+          {lookbookProducts.length > 0 ? (
+            lookbookProducts.map((product: any) => {
+              const imageUrl = getImageUrl(product.thumbnail) || fallbackImage;
+              return (
+                <div key={product.id} className="card group cursor-pointer">
+                  <div className="card__image-wrapper aspect-square">
+                    <Image
+                      src={imageUrl}
+                      alt={product.title}
+                      fill
+                      className="card__image object-cover"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                    <div className="card__overlay">
+                      <div className="text-center">
+                        <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
+                          {product.title}
+                        </h3>
+                        <p className="text-accent">{product.metadata?.collection || ""}</p>
                         <p className="text-text-secondary text-sm mt-2">
-                          {sectionProduct.description}
+                          {product.description}
                         </p>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="col-span-3 text-center py-8">
+              <p className="text-text-secondary">Aucun produit Lookbook disponible pour le moment.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>

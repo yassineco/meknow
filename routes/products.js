@@ -361,7 +361,8 @@ app.put('/api/admin/products/:id', authenticateAdmin, async (req, res) => {
     const allowedFields = [
       'title', 'description', 'status', 'thumbnail', 'images',
       'weight', 'length', 'width', 'height', 'origin_country',
-      'material', 'seo_title', 'seo_description', 'metadata'
+      'material', 'seo_title', 'seo_description', 'metadata',
+      'display_sections'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
