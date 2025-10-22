@@ -1015,8 +1015,8 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Backend Meknow minimal démarré sur port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend Meknow minimal démarré sur 0.0.0.0:${PORT}`);
   console.log(`📱 Frontend: http://localhost:3000`);
   console.log(`⚙️ Admin: http://localhost:${PORT}/admin`);
   console.log(`🔐 Login: http://localhost:${PORT}/login`);
