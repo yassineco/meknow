@@ -1,0 +1,9 @@
+Mode « spider » activé. Vérification de l’existence d’un fichier distant.
+--2025-10-22 01:48:42--  http://meknow.fr/
+Résolution de meknow.fr (meknow.fr)… 31.97.196.215
+Connexion à meknow.fr (meknow.fr)|31.97.196.215|:80… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 11261 (11K) [text/html]
+Le fichier distant existe et pourrait contenir plusieurs liens,
+mais le mode récursif est désactivée — pas de récupération.
+

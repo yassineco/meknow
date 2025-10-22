@@ -1,22 +1,50 @@
 import Image from "next/image";
 
-export default function Lookbook() {
-  const images = [
+// Fonction pour récupérer les produits lookbook depuis l'API
+async function getLookbookProducts() {
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:9000";
+    const response = await fetch(`${API_URL}/api/products/lookbook`, {
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+    
+    if (!response.ok) {
+      console.error('Erreur récupération lookbook:', response.status);
+      return [];
+    }
+    
+    const data = await response.json();
+    return Array.isArray(data.products) ? data.products : [];
+  } catch (error) {
+    console.error('Erreur récupération lookbook:', error);
+    return [];
+  }
+}
+
+export default async function Lookbook() {
+  const lookbookProducts = await getLookbookProducts();
+
+  // Transformation des catégories lookbook en format d'affichage
+  const lookbookSections = [
     {
-      src: "https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=800",
-      title: "Collection Automne",
-      subtitle: "Cuirs premium",
+      key: "collection-premium",
+      title: "Collection Premium", 
+      subtitle: "Cuirs d'exception",
+      fallbackImage: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80"
     },
     {
-      src: "https://images.unsplash.com/photo-1520975867597-0af37a22e31a?w=800",
+      key: "savoir-faire-artisanal", 
       title: "Savoir-faire artisanal",
       subtitle: "Made in Morocco",
+      fallbackImage: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80"
     },
     {
-      src: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800",
-      title: "Style contemporain",
+      key: "style-contemporain",
+      title: "Style contemporain", 
       subtitle: "Design intemporel",
-    },
+      fallbackImage: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"
+    }
   ];
 
   return (
@@ -32,27 +60,43 @@ export default function Lookbook() {
         </div>
 
         <div className="grid grid--3">
-          {images.map((img, i) => (
-            <div key={i} className="card group cursor-pointer">
-              <div className="card__image-wrapper aspect-square">
-                <Image
-                  src={img.src}
-                  alt={img.title}
-                  fill
-                  className="card__image object-cover"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
-                <div className="card__overlay">
-                  <div className="text-center">
-                    <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
-                      {img.title}
-                    </h3>
-                    <p className="text-accent">{img.subtitle}</p>
+          {lookbookSections.map((section, i) => {
+            // Chercher un produit pour cette catégorie lookbook
+            const sectionProduct = lookbookProducts.find(
+              product => product.lookbook_category === section.key
+            );
+            
+            const imageUrl = sectionProduct?.thumbnail || section.fallbackImage;
+            const title = sectionProduct?.title || section.title;
+            const subtitle = sectionProduct?.metadata?.collection || section.subtitle;
+
+            return (
+              <div key={section.key} className="card group cursor-pointer">
+                <div className="card__image-wrapper aspect-square">
+                  <Image
+                    src={imageUrl}
+                    alt={title}
+                    fill
+                    className="card__image object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                  <div className="card__overlay">
+                    <div className="text-center">
+                      <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
+                        {title}
+                      </h3>
+                      <p className="text-accent">{subtitle}</p>
+                      {sectionProduct && (
+                        <p className="text-text-secondary text-sm mt-2">
+                          {sectionProduct.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

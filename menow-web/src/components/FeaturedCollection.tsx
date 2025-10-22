@@ -1,10 +1,36 @@
-import { getProducts } from "@/lib/api";
 import ProductCard from "./ProductCard";
+
+// Fonction pour récupérer les produits catalogue depuis l'API
+async function getCatalogProducts() {
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:9000";
+    const response = await fetch(`${API_URL}/api/products?limit=8`, {
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+    
+    if (!response.ok) {
+      console.error('Erreur récupération produits:', response.status);
+      return [];
+    }
+    
+    const data = await response.json();
+    const allProducts = Array.isArray(data.products) ? data.products : [];
+    
+    // Filtrer uniquement les produits qui ont "catalog" dans display_sections
+    return allProducts.filter((product: any) => 
+      product.display_sections && product.display_sections.includes('catalog')
+    );
+  } catch (error) {
+    console.error('Erreur récupération produits catalogue:', error);
+    return [];
+  }
+}
 
 export default async function FeaturedCollection() {
   try {
-    // 🚀 SUPPRESSION DU FILTRE - Affiche TOUS les produits ajoutés
-    const products = await getProducts({ limit: 8 });
+    // 🚀 Récupère uniquement les produits du CATALOGUE
+    const products = await getCatalogProducts();
 
     return (
       <section className="section bg-bg-primary">
