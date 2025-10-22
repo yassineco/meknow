@@ -984,7 +984,10 @@ app.use(express.static('./', {
   index: false
 }));
 
-// Servir les images statiques
+// Servir les images statiques (stock images)
+app.use('/images', express.static('./attached_assets/stock_images'));
+
+// Servir aussi les images uploadées
 app.use('/images', express.static('./public/images'));
 
 // Route d'upload d'images
