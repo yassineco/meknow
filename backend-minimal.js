@@ -59,6 +59,7 @@ let products = [
     // 🎯 GESTION DES RUBRIQUES
     display_sections: ["catalog", "lookbook"], // Où afficher le produit
     lookbook_category: "collection-premium",    // Catégorie dans lookbook
+    show_price: true,                          // Afficher le prix (par défaut true)
     is_featured: true,                         // Produit vedette
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
@@ -344,6 +345,7 @@ app.post('/admin/products', async (req, res) => {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     status: 'published', // 🚀 AUTO-PUBLIÉ pour affichage immédiat
+    show_price: true,    // Afficher les prix par défaut
     variants: [],
     ...req.body
   };
@@ -724,6 +726,7 @@ app.put('/api/products/:id', async (req, res) => {
       variants: updatedVariants,
       // Mise à jour explicite de display_sections
       display_sections: req.body.display_sections || originalProduct.display_sections,
+      show_price: req.body.show_price !== undefined ? req.body.show_price : originalProduct.show_price,
       updated_at: new Date().toISOString()
     };
     
@@ -742,6 +745,7 @@ app.put('/api/products/:id', async (req, res) => {
       variants: originalProduct.variants, // Préserver les variants originaux
       // Mise à jour explicite de display_sections
       display_sections: req.body.display_sections || originalProduct.display_sections,
+      show_price: req.body.show_price !== undefined ? req.body.show_price : originalProduct.show_price,
       updated_at: new Date().toISOString()
     };
   }

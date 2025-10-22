@@ -612,6 +612,14 @@
                     
                     <div class="form-group">
                         <label style="display: flex; align-items: center; font-weight: bold;">
+                            <input type="checkbox" id="showPrice" checked style="margin-right: 10px; transform: scale(1.2);">
+                            💰 Afficher les prix
+                        </label>
+                        <small style="color: #bdc3c7; margin-left: 28px;">Affiche le prix sur le catalogue et lookbook</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; font-weight: bold;">
                             <input type="checkbox" id="isFeatured" style="margin-right: 10px; transform: scale(1.2);">
                             ⭐ Produit Vedette
                         </label>
@@ -1066,6 +1074,13 @@
                             preview.style.display = 'block';
                         }
                         
+                        // Charger les sections d'affichage
+                        document.getElementById('displayCatalog').checked = product.display_sections && product.display_sections.includes('catalog');
+                        document.getElementById('displayLookbook').checked = product.display_sections && product.display_sections.includes('lookbook');
+                        document.getElementById('lookbookCategory').value = product.lookbook_category || '';
+                        document.getElementById('showPrice').checked = product.show_price !== false;
+                        document.getElementById('isFeatured').checked = product.is_featured || false;
+                        
                         // Changer le titre du modal
                         document.getElementById('modalTitle').textContent = '✏️ Modifier Produit';
                         document.getElementById('productModal').style.display = 'block';
@@ -1242,6 +1257,7 @@
                 // 🎯 NOUVEAUX CHAMPS RUBRIQUES
                 display_sections: displaySections,
                 lookbook_category: document.getElementById('lookbookCategory').value || null,
+                show_price: document.getElementById('showPrice').checked,
                 is_featured: document.getElementById('isFeatured').checked,
                 variants: {
                     S: parseInt(document.getElementById('stockS').value),
