@@ -8,44 +8,95 @@
 
 ## 📋 État Actuel du Projet
 
+### 🎉 DÉPLOYÉ EN PRODUCTION - 22 octobre 2025
+
+**Status**: ✅ LIVE on VPS (31.97.196.215)  
+**All Services**: ✅ RUNNING  
+**Uptime**: Started 13:14 UTC  
+
 ### ✅ Fonctionnalités Actives
 
 | Fonctionnalité | Status | Description |
 |---|---|---|
-| **Backend API** | ✅ Production | Express.js sur port 9000 |
-| **Frontend** | ✅ Production | Next.js 14 sur port 3000 |
-| **PostgreSQL** | ✅ Production | Base de données native persistante |
-| **Interface Admin** | ✅ Fonctionnelle | Gestion complète des produits |
-| **Gestion Produits** | ✅ CRUD complet | Create, Read, Update, Delete |
-| **Persistance Données** | ✅ PostgreSQL | Versioning JSONB implementé |
-| **Images** | ✅ Servies | Backend serve les images statiques |
-| **CSS Styling** | ✅ Appliqué | Tailwind + custom CSS importé |
+| **Backend API** | ✅ Production | Express.js sur port 9000 - LIVE |
+| **Frontend** | ✅ Production | Next.js 14 sur port 3000 - LIVE |
+| **PostgreSQL** | ✅ Production | Base de données native persistante - LIVE |
+| **Interface Admin** | ✅ Fonctionnelle | Gestion complète des produits - LIVE |
+| **Gestion Produits** | ✅ CRUD complet | 4 produits, 3 lookbook items - LIVE |
+| **Persistance Données** | ✅ PostgreSQL | Versioning JSONB implementé - LIVE |
+| **Images** | ✅ Servies | Backend serve les images statiques - LIVE |
+| **CSS Styling** | ✅ Appliqué | Tailwind + custom CSS importé - LIVE |
+| **Nginx Reverse Proxy** | ✅ Configured | Ports 80/443 - READY |
+| **systemd Services** | ✅ Enabled | Auto-restart ON - LIVE |
+| **SSL/TLS** | ⏳ Ready | Let's Encrypt configured - Awaiting domain |
+
+---
+
+## 🚀 Production Deployment Status
+
+### Live Endpoints (VPS 31.97.196.215)
+
+```
+✅ Backend API        : http://localhost:9000/api (internal)
+✅ Frontend          : http://localhost:3000 (internal)
+✅ Admin Interface   : http://localhost:9000/admin
+✅ Health Check      : http://localhost:9000/health
+✅ Products API      : http://localhost:9000/api/products
+✅ Lookbook API      : http://localhost:9000/api/products/lookbook
+
+📊 Metrics:
+   - Backend Process ID: 277746
+   - Frontend Process ID: 276475
+   - Memory (Backend): 33.3 MB
+   - Memory (Frontend): 89.5 MB
+   - Database: 4 products (ready for content)
+   - Lookbook: 3 items displayed
+```
+
+### Service Status
+
+| Service | Status | Port | PID | Uptime |
+|---------|--------|------|-----|--------|
+| Backend (Node.js) | ✅ Running | 9000 | 277746 | 13:14 UTC |
+| Frontend (Next.js) | ✅ Running | 3000 | 276475 | 13:10 UTC |
+| PostgreSQL 16 | ✅ Running | 5432 | - | 12:59 UTC |
+| Nginx | ✅ Running | 80/443 | 276641 | 13:11 UTC |
+| systemd | ✅ Enabled | - | - | Auto-restart ON |
 
 ---
 
 ## 🏗️ Architecture Technique
 
-### Stack Actuel
+### Stack Productif
 
 ```
-Frontend (localhost:3000)
-├── Next.js 14 (App Router)
-├── Tailwind CSS + Custom CSS
-├── React 18 components
-└── TypeScript
+Frontend (Port 3000)
+├── Next.js 14 (App Router) - v14.2.33
+├── React 18.3.1 + TypeScript
+├── Tailwind CSS 3.4.18
+├── Custom CSS (theme.css)
+└── SSR + ISR enabled
 
-Backend (localhost:9000)
-├── Express.js
-├── PostgreSQL (meknow_production)
+Backend (Port 9000)
+├── Express.js 5.1.0
+├── Node.js 18.19.1
+├── PostgreSQL connection pooling
 ├── JSONB versioning
-├── Static files serving
-└── CORS enabled
+├── Admin HTML interface
+└── Static file serving
 
-Database
+Database (Port 5432)
 ├── PostgreSQL 16.10
-├── Table: products_data
-├── Versioning: MAX(version) + 1
-└── JSONB products array
+├── Database: meknow_production
+├── User: meknow (limited privileges)
+├── Table: products_data (versioned)
+└── Max version: Auto-increment
+
+Infrastructure
+├── Nginx 1.24.0 (Reverse Proxy)
+├── systemd services (Auto-restart)
+├── Let's Encrypt ready
+└── Ubuntu 24.04 LTS
 ```
 
 ### Architecture Deployment (Native - Pas de Docker)
@@ -363,6 +414,44 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 - [ ] PostgreSQL backups
 - [ ] Log rotation
 - [ ] Performance monitoring
+
+---
+
+## 🔧 Administration & Monitoring
+
+### Quick Administration Commands
+
+```bash
+# Check service status
+systemctl status meknow-backend.service meknow-frontend.service nginx
+
+# Restart services
+systemctl restart meknow-backend.service meknow-frontend.service
+
+# View backend logs
+journalctl -u meknow-backend.service -f
+
+# View frontend logs
+journalctl -u meknow-frontend.service -f
+
+# Test API
+curl http://localhost:9000/health
+curl http://localhost:9000/api/products | jq .
+
+# Connect to database
+sudo -u postgres psql -d meknow_production
+```
+
+### Full Command Reference
+
+**See `ADMINISTRATION-COMMANDS.md` for comprehensive list of:**
+- Service management commands
+- Monitoring & logging
+- Database operations
+- API testing
+- Backup & restore
+- Emergency procedures
+- Common workflows
 
 ---
 
