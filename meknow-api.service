@@ -1,0 +1,24 @@
+[Unit]
+Description=Meknow E-commerce API Backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/meknow
+ExecStart=/usr/bin/node /var/www/meknow/backend-minimal.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/meknow/api.log
+StandardError=append:/var/log/meknow/api.log
+
+# Limites de ressources
+MemoryLimit=512M
+CPUQuota=50%
+
+# Environnement
+Environment="NODE_ENV=production"
+Environment="PORT=9000"
+
+[Install]
+WantedBy=multi-user.target

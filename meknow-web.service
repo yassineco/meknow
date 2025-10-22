@@ -1,0 +1,24 @@
+[Unit]
+Description=Meknow E-commerce Frontend (Next.js)
+After=network.target meknow-api.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/meknow/menow-web
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/meknow/web.log
+StandardError=append:/var/log/meknow/web.log
+
+# Limites de ressources
+MemoryLimit=1G
+CPUQuota=100%
+
+# Environnement
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+
+[Install]
+WantedBy=multi-user.target
