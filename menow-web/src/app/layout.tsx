@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import "@/styles/globals.css";
-import "@/styles/theme.css";
 
 export const metadata: Metadata = {
   title: "Meknow - Prêt-à-porter Premium Made in Morocco",

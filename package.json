@@ -12,7 +12,9 @@
     "build:web": "npm --prefix menow-web run build",
     "start:web": "npm --prefix menow-web run start",
     "db:init": "psql -h localhost -U postgres -d meknow_production -f schema.sql",
-    "db:reset": "psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS meknow_production; CREATE DATABASE meknow_production;' && npm run db:init"
+    "db:reset": "psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS meknow_production; CREATE DATABASE meknow_production;' && npm run db:init",
+    "migrate": "node migrate-to-postgres.js",
+    "migrate:watch": "nodemon migrate-to-postgres.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

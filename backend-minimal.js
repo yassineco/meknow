@@ -1,9 +1,94 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const { Pool } = require('pg');
+require('dotenv').config();
 
 const app = express();
 const PORT = 9000;
+
+// �️ DATABASE CONFIGURATION
+const pool = new Pool({
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'meknow_production',
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+pool.on('error', (err) => {
+  console.error('❌ Erreur non gérée dans le pool de connexion:', err);
+});
+
+// Test connection
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Erreur de connexion PostgreSQL:', err.message);
+  } else {
+    console.log('✅ PostgreSQL connecté:', res.rows[0]);
+  }
+});
+
+// 💾 PERSISTENCE - PostgreSQL VERSION
+async function loadProducts() {
+  try {
+    const result = await pool.query(`
+      SELECT products FROM products_data 
+      ORDER BY version DESC 
+      LIMIT 1
+    `);
+    
+    if (result.rows.length > 0 && result.rows[0].products && result.rows[0].products.length > 0) {
+      console.log('📂 Loaded', result.rows[0].products.length, 'products from PostgreSQL');
+      return result.rows[0].products;
+    }
+  } catch (error) {
+    console.log('⚠️ Error loading products from PostgreSQL:', error.message);
+  }
+  return null;
+}
+
+// Save products to PostgreSQL
+async function saveProducts(productList) {
+  try {
+    // Récupérer la version actuelle
+    const versionResult = await pool.query(`
+      SELECT MAX(version) as max_version FROM products_data
+    `);
+    
+    const currentVersion = versionResult.rows[0].max_version || 0;
+    const newVersion = currentVersion + 1;
+    
+    // Insérer une nouvelle version
+    await pool.query(`
+      INSERT INTO products_data (products, version, last_modified_at)
+      VALUES ($1, $2, CURRENT_TIMESTAMP)
+    `, [JSON.stringify(productList), newVersion]);
+    
+    console.log('💾 Products saved to PostgreSQL (version ' + newVersion + ')');
+  } catch (error) {
+    console.log('❌ Error saving products:', error.message);
+  }
+}
+
+// Load products from legacy JSON file (for migration)
+function loadProductsFromFile() {
+  try {
+    const PRODUCTS_FILE = './products-data.json';
+    if (fs.existsSync(PRODUCTS_FILE)) {
+      const data = fs.readFileSync(PRODUCTS_FILE, 'utf8');
+      console.log('📂 Loaded products from JSON file for migration');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.log('ℹ️ No JSON file to migrate from:', error.message);
+  }
+  return null;
+}
 
 // Middleware
 app.use(cors({
@@ -46,8 +131,8 @@ async function triggerFrontendRevalidation() {
   }
 }
 
-// Données de test avec gestion de stock
-let products = [
+// Données de test avec gestion de stock (SEED DATA)
+const SEED_PRODUCTS = [
   {
     id: "prod_01JA8H8VQZR3K4M2N5P6Q7S8T9",
     title: "Blouson Cuir Premium",
@@ -299,7 +384,71 @@ const collections = [
   }
 ];
 
-// Routes API Store (frontend)
+// ⏳ VARIABLES GLOBALES INITIALISÉES AU DÉMARRAGE
+let products = [];
+let isReady = false;
+
+// 🚀 INITIALISATION ASYNCHRONE DU SERVEUR
+async function initializeServer() {
+  console.log('🔄 Initializing server...');
+  
+  try {
+    // 1. Créer la table products_data si elle n'existe pas
+    console.log('📋 Ensuring products_data table exists...');
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS products_data (
+        id SERIAL PRIMARY KEY,
+        products JSONB NOT NULL,
+        collections JSONB DEFAULT '[]'::jsonb,
+        version INTEGER DEFAULT 1,
+        last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(version)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_products_data_version ON products_data(version);
+      CREATE INDEX IF NOT EXISTS idx_products_data_modified ON products_data(last_modified_at);
+    `);
+    console.log('✅ Table products_data is ready');
+    
+    // 2. Charger les produits depuis PostgreSQL
+    const loadedProducts = await loadProducts();
+    
+    if (loadedProducts && loadedProducts.length > 0) {
+      products = loadedProducts;
+      console.log('✅ Loaded', products.length, 'existing products from database');
+    } else {
+      // 3. Essayer de migrer depuis le fichier JSON existant
+      console.log('📂 Attempting to migrate products from JSON file...');
+      const jsonProducts = loadProductsFromFile();
+      
+      if (jsonProducts && jsonProducts.length > 0) {
+        products = jsonProducts;
+        await saveProducts(products);
+        console.log('✅ Migrated', products.length, 'products from JSON file to PostgreSQL');
+      } else {
+        // 4. Base de données VIDE - aucun produit à charger
+        products = [];
+        console.log('⚠️  No products found in database or JSON file. Database is empty.');
+        console.log('💡 Use admin interface at http://localhost:9000/admin to add products');
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error during initialization:', error.message);
+    throw error;
+  }
+  
+  isReady = true;
+  console.log('🚀 Server ready for requests');
+}
+
+// Middleware to check if server is ready
+app.use((req, res, next) => {
+  if (!isReady) {
+    return res.status(503).json({ error: 'Server is initializing...' });
+  }
+  next();
+});
 app.get('/store/products', (req, res) => {
   console.log('📦 Store API - GET /store/products');
   res.json({ products });
@@ -351,6 +500,7 @@ app.post('/admin/products', async (req, res) => {
   };
   products.push(newProduct);
   console.log('✅ Produit créé:', newProduct.title);
+  await saveProducts(products);
   
   // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
   await triggerFrontendRevalidation();
@@ -367,6 +517,7 @@ app.post('/admin/products/:id', async (req, res) => {
       updated_at: new Date().toISOString()
     };
     console.log('✅ Produit mis à jour:', products[productIndex].title);
+    await saveProducts(products);
     
     // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
     await triggerFrontendRevalidation();
@@ -377,11 +528,12 @@ app.post('/admin/products/:id', async (req, res) => {
   }
 });
 
-app.delete('/admin/products/:id', (req, res) => {
+app.delete('/admin/products/:id', async (req, res) => {
   const productIndex = products.findIndex(p => p.id === req.params.id);
   if (productIndex !== -1) {
     const deletedProduct = products.splice(productIndex, 1)[0];
     console.log('🗑️ Produit supprimé:', deletedProduct.title);
+    await saveProducts(products);
     res.json({ message: 'Product deleted', product: deletedProduct });
   } else {
     res.status(404).json({ message: 'Product not found' });
@@ -500,6 +652,14 @@ app.post('/admin/auth/session', (req, res) => {
   }
 });
 
+// Ensure all products have show_price field
+function ensureShowPriceField(productList) {
+  return productList.map(product => ({
+    ...product,
+    show_price: product.show_price !== undefined ? product.show_price : true
+  }));
+}
+
 // ===== ROUTES API =====
 app.get('/api/products', (req, res) => {
   console.log('📦 API - GET /api/products', req.query);
@@ -527,7 +687,7 @@ app.get('/api/products', (req, res) => {
   const paginatedProducts = filteredProducts.slice(offset, offset + limit);
   
   res.json({
-    products: paginatedProducts,
+    products: ensureShowPriceField(paginatedProducts),
     count: paginatedProducts.length,
     total: filteredProducts.length,
     offset: offset,
@@ -546,7 +706,7 @@ app.get('/api/products/catalog', (req, res) => {
   );
   
   res.json({
-    products: catalogProducts,
+    products: ensureShowPriceField(catalogProducts),
     count: catalogProducts.length,
     section: 'catalog'
   });
@@ -569,7 +729,7 @@ app.get('/api/products/lookbook', (req, res) => {
   }, {});
   
   res.json({
-    products: lookbookProducts,
+    products: ensureShowPriceField(lookbookProducts),
     grouped: groupedProducts,
     count: lookbookProducts.length,
     section: 'lookbook'
@@ -583,7 +743,7 @@ app.get('/api/products/featured', (req, res) => {
   const featuredProducts = products.filter(product => product.is_featured === true);
   
   res.json({
-    products: featuredProducts,
+    products: ensureShowPriceField(featuredProducts),
     count: featuredProducts.length,
     section: 'featured'
   });
@@ -678,7 +838,10 @@ app.post('/api/products', async (req, res) => {
   
   console.log(`✅ Produit créé: ${title} (ID: ${productId})`);
   
-  // 🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
+  // � SAUVEGARDER EN POSTGRESQL
+  await saveProducts(products);
+  
+  // �🚀 DÉCLENCHEMENT REVALIDATION AUTOMATIQUE
   await triggerFrontendRevalidation();
   
   res.json({
@@ -763,7 +926,7 @@ app.put('/api/products/:id', async (req, res) => {
 });
 
 // Route pour supprimer un produit
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', async (req, res) => {
   console.log(`📦 API - DELETE /api/products/${req.params.id}`);
   
   const productIndex = products.findIndex(p => p.id === req.params.id);
@@ -776,6 +939,9 @@ app.delete('/api/products/:id', (req, res) => {
   
   const deletedProduct = products.splice(productIndex, 1)[0];
   console.log(`🗑️ Produit supprimé: ${deletedProduct.title}`);
+  
+  // 💾 SAUVEGARDER EN POSTGRESQL
+  await saveProducts(products);
   
   res.json({
     success: true,
@@ -951,7 +1117,6 @@ app.get('/login', (req, res) => {
 
 // ===== UPLOAD D'IMAGES =====
 const multer = require('multer');
-const fs = require('fs');
 
 // Configuration stockage images
 const storage = multer.diskStorage({
@@ -1018,15 +1183,43 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'meknow-backend-minimal' });
+  res.json({ status: 'ok', service: 'meknow-backend-minimal', ready: isReady });
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend Meknow minimal démarré sur 0.0.0.0:${PORT}`);
-  console.log(`📱 Frontend: http://localhost:3000`);
-  console.log(`⚙️ Admin: http://localhost:${PORT}/admin`);
-  console.log(`🔐 Login: http://localhost:${PORT}/login`);
-  console.log(`📦 API: http://localhost:${PORT}/api/products`);
-  console.log(`📷 Upload: /api/upload | Images: /images/*`);
+// Start server and initialize data
+async function startServer() {
+  try {
+    // Initialize database and products
+    await initializeServer();
+    
+    // Start listening
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Backend Meknow minimal démarré sur 0.0.0.0:${PORT}`);
+      console.log(`📱 Frontend: http://localhost:3000`);
+      console.log(`⚙️ Admin: http://localhost:${PORT}/admin`);
+      console.log(`🔐 Login: http://localhost:${PORT}/login`);
+      console.log(`📦 API: http://localhost:${PORT}/api/products`);
+      console.log(`📷 Upload: /api/upload | Images: /images/*`);
+      console.log(`🗄️ Database: PostgreSQL (${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'meknow_production'})`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, closing gracefully...');
+  await pool.end();
+  process.exit(0);
 });
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, closing gracefully...');
+  await pool.end();
+  process.exit(0);
+});
+
+// Start the application
+startServer();

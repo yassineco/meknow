@@ -46,7 +46,7 @@ export default function Header() {
               </svg>
             </button>
             <button className="relative p-2 text-text-primary hover:text-accent transition-colors">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M1 1h3l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L22 6H6" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               {cartCount > 0 && (
