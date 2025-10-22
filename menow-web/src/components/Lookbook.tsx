@@ -48,13 +48,21 @@ export default async function Lookbook() {
               return (
                 <div key={product.id} className="card group cursor-pointer">
                   <div className="card__image-wrapper aspect-square">
-                    <Image
-                      src={imageUrl}
-                      alt={product.title}
-                      fill
-                      className="card__image object-cover"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
+                    {imageUrl && !imageUrl.includes('unsplash') ? (
+                      <img
+                        src={imageUrl}
+                        alt={product.title}
+                        className="card__image w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={imageUrl}
+                        alt={product.title}
+                        fill
+                        className="card__image object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    )}
                     <div className="card__overlay">
                       <div className="text-center">
                         <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
