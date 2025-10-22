@@ -5,7 +5,8 @@ export function cn(...classes: (string | undefined | null | false)[]) {
 export function getImageUrl(url?: string): string {
   if (!url) return '/placeholder.jpg';
   if (url.startsWith('http')) return url;
-  return `${process.env.NEXT_PUBLIC_API_URL}${url}`;
+  // Keep relative paths as-is for frontend to resolve from current domain
+  return url;
 }
 
 export function truncate(str: string, length: number): string {
