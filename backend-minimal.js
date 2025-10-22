@@ -75,21 +75,6 @@ async function saveProducts(productList) {
   }
 }
 
-// Load products from legacy JSON file (for migration)
-function loadProductsFromFile() {
-  try {
-    const PRODUCTS_FILE = './products-data.json';
-    if (fs.existsSync(PRODUCTS_FILE)) {
-      const data = fs.readFileSync(PRODUCTS_FILE, 'utf8');
-      console.log('📂 Loaded products from JSON file for migration');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.log('ℹ️ No JSON file to migrate from:', error.message);
-  }
-  return null;
-}
-
 // Middleware
 app.use(cors({
   origin: [
@@ -131,252 +116,7 @@ async function triggerFrontendRevalidation() {
   }
 }
 
-// Données de test avec gestion de stock (SEED DATA)
-const SEED_PRODUCTS = [
-  {
-    id: "prod_01JA8H8VQZR3K4M2N5P6Q7S8T9",
-    title: "Blouson Cuir Premium",
-    handle: "blouson-cuir-premium",
-    description: "Blouson en cuir véritable, confection artisanale française",
-    thumbnail: "/images/luxury_fashion_jacke_28fde759.jpg",
-    status: "published",
-    collection_id: "coll_capsule",
-    // 🎯 GESTION DES RUBRIQUES
-    display_sections: ["catalog", "lookbook"], // Où afficher le produit
-    lookbook_category: "collection-premium",    // Catégorie dans lookbook
-    show_price: true,                          // Afficher le prix (par défaut true)
-    show_title: true,                          // Afficher le titre (par défaut true)
-    is_featured: true,                         // Produit vedette
-    created_at: "2025-10-14T10:00:00Z",
-    updated_at: "2025-10-14T10:00:00Z",
-    weight: 1200,
-    length: 30,
-    width: 25,
-    height: 5,
-    origin_country: "FR",
-    material: "Cuir véritable",
-    metadata: { brand: "Meknow", collection: "Premium" },
-    variants: [
-      { 
-        id: "variant_1", 
-        title: "S", 
-        sku: "BLOUSON-S", 
-        inventory_quantity: 15,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 25900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_2", 
-        title: "M", 
-        sku: "BLOUSON-M", 
-        inventory_quantity: 22,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 25900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_3", 
-        title: "L", 
-        sku: "BLOUSON-L", 
-        inventory_quantity: 18,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 25900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_4", 
-        title: "XL", 
-        sku: "BLOUSON-XL", 
-        inventory_quantity: 8,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 25900, currency_code: "eur" }] 
-      }
-    ]
-  },
-  {
-    id: "prod_01JA8H8VQZR3K4M2N5P6Q7S8U0",
-    title: "Jean Denim Selvage",
-    handle: "jean-denim-selvage",
-    description: "Jean en denim selvage authentique, coupe moderne",
-    thumbnail: "/images/luxury_fashion_jacke_45c6de81.jpg",
-    status: "published",
-    collection_id: "coll_capsule",
-    // 🎯 GESTION DES RUBRIQUES
-    display_sections: ["catalog"],             // Catalogue uniquement
-    lookbook_category: null,                   // Pas dans lookbook
-    is_featured: false,                        // Pas vedette
-    created_at: "2025-10-14T10:00:00Z",
-    updated_at: "2025-10-14T10:00:00Z",
-    weight: 800,
-    length: 40,
-    width: 20,
-    height: 3,
-    origin_country: "FR",
-    material: "Denim 100% coton",
-    metadata: { brand: "Meknow", collection: "Essentials" },
-    variants: [
-      { 
-        id: "variant_5", 
-        title: "S", 
-        sku: "JEAN-S", 
-        inventory_quantity: 25,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 18900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_6", 
-        title: "M", 
-        sku: "JEAN-M", 
-        inventory_quantity: 30,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 18900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_7", 
-        title: "L", 
-        sku: "JEAN-L", 
-        inventory_quantity: 20,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 18900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_8", 
-        title: "XL", 
-        sku: "JEAN-XL", 
-        inventory_quantity: 12,
-        manage_inventory: true,
-        allow_backorder: false,
-        prices: [{ amount: 18900, currency_code: "eur" }] 
-      }
-    ]
-  },
-  {
-    id: "prod_01JA8H8VQZR3K4M2N5P6Q7S8V1",
-    title: "Chemise Lin Naturel",
-    handle: "chemise-lin-naturel",
-    description: "Chemise en lin naturel, légère et respirante",
-    thumbnail: "/images/premium_fashion_coll_0e2672aa.jpg",
-    status: "published",
-    collection_id: "coll_capsule",
-    // 🎯 GESTION DES RUBRIQUES
-    display_sections: ["lookbook"],            // Lookbook uniquement  
-    lookbook_category: "style-contemporain",   // Catégorie lookbook
-    is_featured: true,                         // Produit vedette
-    created_at: "2025-10-14T10:00:00Z",
-    updated_at: "2025-10-14T10:00:00Z",
-    weight: 300,
-    length: 25,
-    width: 20,
-    height: 2,
-    origin_country: "FR",
-    material: "Lin 100% naturel",
-    metadata: { brand: "Meknow", collection: "Naturel" },
-    variants: [
-      { 
-        id: "variant_9", 
-        title: "S", 
-        sku: "CHEMISE-S", 
-        inventory_quantity: 35,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 14900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_10", 
-        title: "M", 
-        sku: "CHEMISE-M", 
-        inventory_quantity: 40,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 14900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_11", 
-        title: "L", 
-        sku: "CHEMISE-L", 
-        inventory_quantity: 28,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 14900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_12", 
-        title: "XL", 
-        sku: "CHEMISE-XL", 
-        inventory_quantity: 15,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 14900, currency_code: "eur" }] 
-      }
-    ]
-  },
-  {
-    id: "prod_01JA8H8VQZR3K4M2N5P6Q7S8W2",
-    title: "T-Shirt Coton Bio",
-    handle: "tshirt-coton-bio",
-    description: "T-shirt en coton biologique, confortable et durable",
-    thumbnail: "/images/premium_fashion_coll_55d86770.jpg",
-    status: "published",
-    collection_id: "coll_capsule",
-    // 🎯 GESTION DES RUBRIQUES
-    display_sections: ["catalog", "lookbook"], // Les deux rubriques
-    lookbook_category: "savoir-faire-artisanal", // Catégorie lookbook
-    is_featured: false,                        // Pas vedette
-    created_at: "2025-10-14T10:00:00Z",
-    updated_at: "2025-10-14T10:00:00Z",
-    weight: 200,
-    length: 20,
-    width: 15,
-    height: 1,
-    origin_country: "FR",
-    material: "Coton bio certifié",
-    metadata: { brand: "Meknow", collection: "Bio" },
-    variants: [
-      { 
-        id: "variant_13", 
-        title: "S", 
-        sku: "TSHIRT-S", 
-        inventory_quantity: 50,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_14", 
-        title: "M", 
-        sku: "TSHIRT-M", 
-        inventory_quantity: 60,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_15", 
-        title: "L", 
-        sku: "TSHIRT-L", 
-        inventory_quantity: 45,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      },
-      { 
-        id: "variant_16", 
-        title: "XL", 
-        sku: "TSHIRT-XL", 
-        inventory_quantity: 30,
-        manage_inventory: true,
-        allow_backorder: true,
-        prices: [{ amount: 9900, currency_code: "eur" }] 
-      }
-    ]
-  }
-];
-
+// Collections de référence
 const collections = [
   {
     id: "coll_capsule",
@@ -417,22 +157,13 @@ async function initializeServer() {
     
     if (loadedProducts && loadedProducts.length > 0) {
       products = loadedProducts;
-      console.log('✅ Loaded', products.length, 'existing products from database');
+      console.log('✅ Loaded', products.length, 'products from database');
     } else {
-      // 3. Essayer de migrer depuis le fichier JSON existant
-      console.log('📂 Attempting to migrate products from JSON file...');
-      const jsonProducts = loadProductsFromFile();
-      
-      if (jsonProducts && jsonProducts.length > 0) {
-        products = jsonProducts;
-        await saveProducts(products);
-        console.log('✅ Migrated', products.length, 'products from JSON file to PostgreSQL');
-      } else {
-        // 4. Base de données VIDE - aucun produit à charger
-        products = [];
-        console.log('⚠️  No products found in database or JSON file. Database is empty.');
-        console.log('💡 Use admin interface at http://localhost:9000/admin to add products');
-      }
+      // Base vide - utiliser l'admin pour ajouter des produits
+      products = [];
+      console.log('⚠️  Database is empty. Use admin interface or /api/init to add products');
+      console.log('📝 Admin interface: https://meknow.fr/admin');
+      console.log('� API endpoint: POST /api/init (pour initialiser avec données de test)');
     }
   } catch (error) {
     console.error('❌ Error during initialization:', error.message);
@@ -663,6 +394,50 @@ function ensureShowPriceField(productList) {
 }
 
 // ===== ROUTES API =====
+
+// 🌱 ENDPOINT D'INITIALISATION - Charger les données de seed
+app.post('/api/init', async (req, res) => {
+  try {
+    if (products.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Database already initialized with products',
+        count: products.length 
+      });
+    }
+
+    // Charger depuis seed-data.json
+    const seedFilePath = path.join(__dirname, 'seed-data.json');
+    if (!fs.existsSync(seedFilePath)) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'seed-data.json not found' 
+      });
+    }
+
+    const seedData = JSON.parse(fs.readFileSync(seedFilePath, 'utf8'));
+    products = seedData;
+    
+    // Sauvegarder en base de données
+    await saveProducts(products);
+    
+    console.log('✅ Database initialized with', products.length, 'products from seed-data.json');
+    
+    res.json({ 
+      success: true, 
+      message: 'Database initialized successfully',
+      products_count: products.length,
+      products: products
+    });
+  } catch (error) {
+    console.error('❌ Error during initialization:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Initialization failed: ' + error.message 
+    });
+  }
+});
+
 app.get('/api/products', (req, res) => {
   console.log('📦 API - GET /api/products', req.query);
   
