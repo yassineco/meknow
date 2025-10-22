@@ -44,16 +44,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         {product.subtitle && (
           <p className="text-text-secondary text-sm mb-4">{product.subtitle}</p>
         )}
-        <div className="flex items-center justify-between">
-          {product.show_price !== false && (
+        {product.show_price !== false && (
+          <div className="flex items-center justify-between">
             <span className="font-semibold text-lg text-accent">
               {formatPrice(price)}
             </span>
-          )}
-          <span className="text-xs text-text-secondary uppercase tracking-wide">
-            Paiement comptant ✓
-          </span>
-        </div>
+          </div>
+        )}
       </div>
     </Link>
   );
