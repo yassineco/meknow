@@ -620,6 +620,14 @@
                     
                     <div class="form-group">
                         <label style="display: flex; align-items: center; font-weight: bold;">
+                            <input type="checkbox" id="showTitle" checked style="margin-right: 10px; transform: scale(1.2);">
+                            🏷️ Afficher le nom du produit
+                        </label>
+                        <small style="color: #bdc3c7; margin-left: 28px;">Affiche le titre sur le catalogue et lookbook</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; font-weight: bold;">
                             <input type="checkbox" id="isFeatured" style="margin-right: 10px; transform: scale(1.2);">
                             ⭐ Produit Vedette
                         </label>
@@ -1079,6 +1087,7 @@
                         document.getElementById('displayLookbook').checked = product.display_sections && product.display_sections.includes('lookbook');
                         document.getElementById('lookbookCategory').value = product.lookbook_category || '';
                         document.getElementById('showPrice').checked = product.show_price !== false;
+                        document.getElementById('showTitle').checked = product.show_title !== false;
                         document.getElementById('isFeatured').checked = product.is_featured || false;
                         
                         // Changer le titre du modal
@@ -1258,6 +1267,7 @@
                 display_sections: displaySections,
                 lookbook_category: document.getElementById('lookbookCategory').value || null,
                 show_price: document.getElementById('showPrice').checked,
+                show_title: document.getElementById('showTitle').checked,
                 is_featured: document.getElementById('isFeatured').checked,
                 variants: {
                     S: parseInt(document.getElementById('stockS').value),

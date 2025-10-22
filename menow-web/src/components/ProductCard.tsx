@@ -38,9 +38,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       <div className="p-6">
-        <h3 className="font-display text-xl font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
-          {product.title}
-        </h3>
+        {product.show_title !== false && (
+          <h3 className="font-display text-xl font-bold text-text-primary mb-2 group-hover:text-accent transition-colors">
+            {product.title}
+          </h3>
+        )}
         {product.subtitle && (
           <p className="text-text-secondary text-sm mb-4">{product.subtitle}</p>
         )}

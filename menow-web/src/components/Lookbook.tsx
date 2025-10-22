@@ -65,10 +65,14 @@ export default async function Lookbook() {
                     )}
                     <div className="card__overlay">
                       <div className="text-center">
-                        <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
-                          {product.title}
-                        </h3>
-                        <p className="text-accent">{product.metadata?.collection || ""}</p>
+                        {product.show_title !== false && (
+                          <>
+                            <h3 className="font-display text-2xl font-bold text-text-primary mb-2">
+                              {product.title}
+                            </h3>
+                            <p className="text-accent">{product.metadata?.collection || ""}</p>
+                          </>
+                        )}
                         <p className="text-text-secondary text-sm mt-2">
                           {product.description}
                         </p>

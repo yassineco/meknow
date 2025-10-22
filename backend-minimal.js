@@ -145,6 +145,7 @@ const SEED_PRODUCTS = [
     display_sections: ["catalog", "lookbook"], // Où afficher le produit
     lookbook_category: "collection-premium",    // Catégorie dans lookbook
     show_price: true,                          // Afficher le prix (par défaut true)
+    show_title: true,                          // Afficher le titre (par défaut true)
     is_featured: true,                         // Produit vedette
     created_at: "2025-10-14T10:00:00Z",
     updated_at: "2025-10-14T10:00:00Z",
@@ -652,11 +653,12 @@ app.post('/admin/auth/session', (req, res) => {
   }
 });
 
-// Ensure all products have show_price field
+// Ensure all products have show_price and show_title fields
 function ensureShowPriceField(productList) {
   return productList.map(product => ({
     ...product,
-    show_price: product.show_price !== undefined ? product.show_price : true
+    show_price: product.show_price !== undefined ? product.show_price : true,
+    show_title: product.show_title !== undefined ? product.show_title : true
   }));
 }
 
@@ -890,6 +892,7 @@ app.put('/api/products/:id', async (req, res) => {
       // Mise à jour explicite de display_sections
       display_sections: req.body.display_sections || originalProduct.display_sections,
       show_price: req.body.show_price !== undefined ? req.body.show_price : originalProduct.show_price,
+      show_title: req.body.show_title !== undefined ? req.body.show_title : originalProduct.show_title,
       updated_at: new Date().toISOString()
     };
     
@@ -909,6 +912,7 @@ app.put('/api/products/:id', async (req, res) => {
       // Mise à jour explicite de display_sections
       display_sections: req.body.display_sections || originalProduct.display_sections,
       show_price: req.body.show_price !== undefined ? req.body.show_price : originalProduct.show_price,
+      show_title: req.body.show_title !== undefined ? req.body.show_title : originalProduct.show_title,
       updated_at: new Date().toISOString()
     };
   }
