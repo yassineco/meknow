@@ -362,7 +362,7 @@ app.post('/admin/auth/session', (req, res) => {
   const { email, password } = req.body;
   console.log('🔐 Admin Login attempt:', email);
   
-  if (email === 'admin@meknow.fr' && password === 'admin123') {
+  if (email === 'admin@meknow.fr' && password === 'hayf654321*') {
     res.json({
       success: true,
       token: 'admin_token_' + Date.now(),
