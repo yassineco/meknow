@@ -904,8 +904,16 @@
                     // Cacher le modal
                     hideLoginModal();
                     
-                    // Recharger la page pour initialiser l'admin
-                    location.reload();
+                    // Charger les données directement sans recharger la page
+                    try {
+                        loadDashboard();
+                        loadProducts();
+                        showNotification('Connexion réussie !', 'success');
+                    } catch (loadError) {
+                        console.error('Erreur lors du chargement des données:', loadError);
+                        // En cas d'erreur, recharger la page comme fallback
+                        location.reload();
+                    }
                 } else {
                     errorMessage.textContent = data.error || 'Erreur de connexion';
                     errorMessage.style.display = 'block';
@@ -1083,13 +1091,39 @@
         
         // Dashboard functions
         function loadDashboard() {
-            debugLog('Loading dashboard data');
+            debugLog('Loading dashboard data from: ' + API_BASE + '/api/products');
+            
+            // Vérifier si les éléments DOM existent
+            const totalProductsEl = document.getElementById('totalProducts');
+            const lowStockCountEl = document.getElementById('lowStockCount');
+            
+            if (!totalProductsEl || !lowStockCountEl) {
+                debugLog('Error: Dashboard DOM elements not found');
+                console.error('Dashboard elements missing:', {
+                    totalProducts: !!totalProductsEl,
+                    lowStockCount: !!lowStockCountEl
+                });
+                return;
+            }
             
             // Utiliser l'API publique temporairement
             fetch(`${API_BASE}/api/products`)
-            .then(response => response.json())
+            .then(response => {
+                debugLog('Dashboard API response status: ' + response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                document.getElementById('totalProducts').textContent = data.products.length;
+                debugLog('Dashboard API data received:', data);
+                
+                if (!data || !data.products) {
+                    throw new Error('Invalid API response structure');
+                }
+                
+                const productCount = data.products.length;
+                totalProductsEl.textContent = productCount;
                 
                 // Count low stock items
                 let lowStock = 0;
@@ -1100,13 +1134,19 @@
                         });
                     }
                 });
-                document.getElementById('lowStockCount').textContent = lowStock;
+                lowStockCountEl.textContent = lowStock;
                 
-                debugLog(`Dashboard loaded: ${data.products.length} products, ${lowStock} low stock alerts`);
+                debugLog(`Dashboard loaded successfully: ${productCount} products, ${lowStock} low stock alerts`);
             })
             .catch(error => {
                 debugLog(`Error loading dashboard: ${error.message}`);
-                showNotification('Erreur lors du chargement du tableau de bord', 'error');
+                console.error('Dashboard loading error:', error);
+                
+                // Afficher des valeurs par défaut en cas d'erreur
+                if (totalProductsEl) totalProductsEl.textContent = 'Erreur';
+                if (lowStockCountEl) lowStockCountEl.textContent = 'Erreur';
+                
+                showNotification('Erreur lors du chargement du tableau de bord: ' + error.message, 'error');
             });
         }
 
