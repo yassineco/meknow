@@ -696,9 +696,50 @@
         let uploadedImageUrl = null;
         let currentEditingProduct = null;
         
+        // Fonctions de gestion des tokens (compatible mode privé iOS)
+        function setAuthToken(token) {
+            try {
+                localStorage.setItem('adminToken', token);
+            } catch (e) {
+                console.warn('localStorage non disponible, utilisation des cookies');
+            }
+            // Fallback avec cookies pour mode privé
+            document.cookie = `meknow_admin_token=${token}; secure; samesite=none; max-age=86400`;
+        }
+
+        function getAuthToken() {
+            // Essayer localStorage d'abord
+            try {
+                const localToken = localStorage.getItem('adminToken');
+                if (localToken) return localToken;
+            } catch (e) {
+                console.warn('localStorage non accessible');
+            }
+            
+            // Fallback avec cookies
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'meknow_admin_token') {
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        function removeAuthToken() {
+            try {
+                localStorage.removeItem('adminToken');
+            } catch (e) {
+                console.warn('localStorage non accessible pour suppression');
+            }
+            // Supprimer le cookie
+            document.cookie = 'meknow_admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+
         // Vérification d'authentification au chargement
         function checkAuth() {
-            const token = localStorage.getItem('adminToken');
+            const token = getAuthToken();
             if (!token) {
                 showNotification('Session expirée. Redirection vers la page de connexion...', 'warning');
                 setTimeout(() => {
@@ -711,7 +752,7 @@
 
         // Helper pour obtenir les en-têtes avec authentification
         function getAuthHeaders() {
-            const token = localStorage.getItem('adminToken');
+            const token = getAuthToken();
             return {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
@@ -720,7 +761,7 @@
 
         // Helper pour les requêtes fetch avec authentification
         function authenticatedFetch(url, options = {}) {
-            const token = localStorage.getItem('adminToken');
+            const token = getAuthToken();
             if (!token) {
                 showNotification('Token d\'authentification manquant', 'error');
                 setTimeout(() => window.location.href = '/login', 1500);
@@ -748,7 +789,7 @@
                 .then(response => {
                     if (response.status === 401) {
                         showNotification('Session expirée. Redirection...', 'warning');
-                        localStorage.removeItem('adminToken');
+                        removeAuthToken();
                         setTimeout(() => window.location.href = '/login', 1500);
                         throw new Error('Authentication failed');
                     }

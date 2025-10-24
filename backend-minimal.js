@@ -363,9 +363,19 @@ app.post('/admin/auth/session', (req, res) => {
   console.log('🔐 Admin Login attempt:', email);
   
   if (email === 'admin@meknow.fr' && password === 'hayf654321*') {
+    const token = 'admin_token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    // Configuration des cookies compatible avec le mode privé iOS
+    res.cookie('meknow_admin_token', token, {
+      httpOnly: false,  // Permet l'accès via JavaScript pour le mode privé
+      secure: true,     // HTTPS uniquement
+      sameSite: 'none', // Compatible avec mode privé
+      maxAge: 24 * 60 * 60 * 1000 // 24 heures
+    });
+    
     res.json({
       success: true,
-      token: 'admin_token_' + Date.now(),
+      token: token,
       user: {
         id: 'admin_01',
         email: 'admin@meknow.fr',

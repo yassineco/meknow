@@ -209,9 +209,17 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Stocker le token
-                    localStorage.setItem('adminToken', data.token);
-                    localStorage.setItem('adminUser', JSON.stringify(data.admin));
+                    // Stocker le token de manière compatible mode privé iOS
+                    try {
+                        localStorage.setItem('adminToken', data.token);
+                        localStorage.setItem('adminUser', JSON.stringify(data.admin));
+                    } catch (e) {
+                        console.warn('localStorage non disponible, utilisation des cookies');
+                    }
+                    
+                    // Fallback avec cookies pour mode privé
+                    document.cookie = `meknow_admin_token=${data.token}; secure; samesite=none; max-age=86400`;
+                    document.cookie = `meknow_admin_user=${encodeURIComponent(JSON.stringify(data.admin))}; secure; samesite=none; max-age=86400`;
                     
                     // Show success
                     successMessage.textContent = '✅ Connexion réussie ! Redirection...';
