@@ -350,6 +350,7 @@
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
             
             .sidebar.mobile-open {
@@ -359,6 +360,51 @@
             .main-content {
                 margin-left: 0;
             }
+        }
+
+        /* Bouton hamburger pour mobile */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        /* Overlay pour fermer le menu en cliquant à l'extérieur */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .mobile-overlay.active {
+            display: block;
         }
 
         /* Modal de connexion */
@@ -457,6 +503,14 @@
     <!-- Debug -->
     <button class="debug-toggle" onclick="toggleDebug()">Debug</button>
     <div id="debugConsole" class="debug-console"></div>
+
+    <!-- Bouton menu mobile -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">
+        <span id="menuIcon">☰</span>
+    </button>
+
+    <!-- Overlay mobile -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
     <!-- Modal de connexion -->
     <div id="loginModal" class="login-modal">
@@ -974,6 +1028,43 @@
                     return response;
                 });
         }
+
+        // Fonctions de gestion du menu mobile
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            const menuIcon = document.getElementById('menuIcon');
+            
+            if (sidebar.classList.contains('mobile-open')) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        }
+
+        function openMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            const menuIcon = document.getElementById('menuIcon');
+            
+            sidebar.classList.add('mobile-open');
+            overlay.classList.add('active');
+            menuIcon.textContent = '✕';
+            
+            debugLog('Mobile menu opened');
+        }
+
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            const menuIcon = document.getElementById('menuIcon');
+            
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+            menuIcon.textContent = '☰';
+            
+            debugLog('Mobile menu closed');
+        }
         
         function debugLog(message) {
             console.log('[DEBUG]', message);
@@ -1058,6 +1149,9 @@
         // Navigation
         function showSection(sectionId) {
             debugLog(`Switching to section: ${sectionId}`);
+            
+            // Fermer le menu mobile si ouvert
+            closeMobileMenu();
             
             // Hide all sections
             document.querySelectorAll('.content-section').forEach(section => {
